@@ -50,7 +50,7 @@ const serviceToggleSchema = z.object({
   directus: z.boolean().default(DEFAULT_SERVICE_TOGGLE.directus),
   seaweedfs: z.boolean().default(DEFAULT_SERVICE_TOGGLE.seaweedfs),
   windmill: z.boolean().default(DEFAULT_SERVICE_TOGGLE.windmill),
-  homepage: z.boolean().default(DEFAULT_SERVICE_TOGGLE.homepage),
+  homarr: z.boolean().default(DEFAULT_SERVICE_TOGGLE.homarr),
 });
 
 export const projectConfigSchema = z.object({

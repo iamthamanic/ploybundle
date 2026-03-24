@@ -15,7 +15,7 @@ const SERVICE_URL_MAP: Record<string, keyof ReturnType<typeof buildProjectUrls>>
   windmill: "functions",
   deploy: "deploy",
   dashboard: "dashboard",
-  homepage: "dashboard",
+  homarr: "dashboard",
 };
 
 export function registerOpenCommand(program: Command, context: CliContext): void {

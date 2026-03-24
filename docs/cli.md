@@ -66,7 +66,7 @@ ploybundle logs questolin --service directus
 ploybundle logs questolin --service postgres
 ```
 
-Available services: `nextjs`, `postgres`, `redis`, `directus`, `seaweedfs`, `windmill`, `homepage`.
+Available services: `nextjs`, `postgres`, `redis`, `directus`, `seaweedfs`, `windmill`, `homarr`.
 
 ### `ploybundle update <project-name>`
 

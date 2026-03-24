@@ -23,7 +23,7 @@ ploybundle init questolin \
 
 | Service    | Role                          |
 |------------|-------------------------------|
-| Homepage   | Project dashboard             |
+| Homarr     | Project hub dashboard         |
 | Next.js    | Frontend + API routes         |
 | Postgres   | Primary database              |
 | Redis      | Cache & queue                 |
@@ -94,6 +94,7 @@ docs/                  # Architecture and usage docs
 - [Presets](docs/presets.md)
 - [Security](docs/security.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [Homarr Migration](docs/homarr-migration.md)
 
 ## License
 

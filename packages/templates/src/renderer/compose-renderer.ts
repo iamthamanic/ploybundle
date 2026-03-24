@@ -222,17 +222,17 @@ export function renderComposeFile(config: ProjectConfig): string {
     };
   }
 
-  // Homepage
-  if (config.services.homepage) {
-    compose.services.homepage = {
-      image: DOCKER_IMAGES.homepage,
-      container_name: `${prefix}-homepage`,
+  // Homarr
+  if (config.services.homarr) {
+    compose.services.homarr = {
+      image: DOCKER_IMAGES.homarr,
+      container_name: `${prefix}-homarr`,
       restart: "unless-stopped",
       ports: ["3001:3000"],
       volumes: [
-        "./homepage:/app/config",
+        "./homarr:/appdata",
       ],
-      environment: ["HOMEPAGE_ALLOWED_HOSTS=*"],
+      environment: ["TZ=UTC"],
       healthcheck: {
         test: ["CMD-SHELL", "wget --spider -q http://localhost:3000 || exit 1"],
         interval: "15s",

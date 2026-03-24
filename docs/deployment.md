@@ -18,7 +18,7 @@ Before running `ploybundle init`, configure these DNS A records pointing to your
 | `storage` | A      | SeaweedFS        |
 | `fn`      | A      | Windmill         |
 | `deploy`  | A      | Control plane    |
-| `home`    | A      | Homepage dashboard|
+| `home`    | A      | Homarr dashboard|
 
 Or use a wildcard: `*.yourdomain.com → VPS_IP`
 
@@ -85,7 +85,7 @@ After successful deployment, you'll see URLs for:
 4. **Installs Docker** if missing
 5. **Installs platform** (CapRover or Coolify)
 6. **Generates secrets** (Postgres, Redis, Directus, SeaweedFS, Windmill, app)
-7. **Renders** docker-compose, env files, service configs, homepage
+7. **Renders** docker-compose, env files, service configs, homarr
 8. **Deploys** the stack via docker compose
 9. **Seeds** services: creates buckets, bootstraps Directus collections and roles, sets up Windmill workspace
 10. **Verifies** all services are healthy

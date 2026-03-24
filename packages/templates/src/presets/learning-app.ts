@@ -11,7 +11,7 @@ export const learningAppPreset: PresetDefinition = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homepage: true,
+    homarr: true,
   },
   buckets: [
     { name: "assets", public: true },
@@ -171,7 +171,7 @@ export async function main(event: {
 }`,
     },
   ],
-  homepageLayout: {
+  homarrLayout: {
     title: "Learning App",
     subtitle: "Gamified learning platform powered by Ploybundle",
     links: [

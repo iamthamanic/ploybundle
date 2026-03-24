@@ -11,7 +11,7 @@ export const workflowAppPreset: PresetDefinition = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homepage: true,
+    homarr: true,
   },
   buckets: [
     { name: "inputs", public: false },
@@ -97,7 +97,7 @@ export async function main(payload: { workflowId: string; data: Record<string, u
 }`,
     },
   ],
-  homepageLayout: {
+  homarrLayout: {
     title: "Workflow App",
     subtitle: "Workflow automation and data pipeline platform powered by Ploybundle",
     links: [

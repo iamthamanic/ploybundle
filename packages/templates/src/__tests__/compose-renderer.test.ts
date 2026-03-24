@@ -24,7 +24,7 @@ const baseConfig: ProjectConfig = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homepage: true,
+    homarr: true,
   },
   buckets: [{ name: "assets", public: false }],
   directus: { adminEmail: "admin@test.example.com" },
@@ -49,7 +49,7 @@ describe("renderComposeFile", () => {
     expect(result).toContain("seaweedfs:");
     expect(result).toContain("windmill:");
     expect(result).toContain("nextjs:");
-    expect(result).toContain("homepage:");
+    expect(result).toContain("homarr:");
   });
 
   it("uses project name as container name prefix", () => {

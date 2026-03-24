@@ -11,7 +11,7 @@ export const crudSaasPreset: PresetDefinition = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homepage: true,
+    homarr: true,
   },
   buckets: [
     { name: "uploads", public: false },
@@ -72,7 +72,7 @@ export async function main() {
 }`,
     },
   ],
-  homepageLayout: {
+  homarrLayout: {
     title: "CRUD SaaS",
     subtitle: "Multi-tenant SaaS application powered by Ploybundle",
     links: [

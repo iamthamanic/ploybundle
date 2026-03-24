@@ -54,16 +54,16 @@ describe("presets", () => {
           expect(preset.description).toBeTruthy();
           expect(preset.services).toBeTruthy();
           expect(preset.buckets).toBeTruthy();
-          expect(preset.homepageLayout).toBeTruthy();
-          expect(preset.homepageLayout.title).toBeTruthy();
-          expect(preset.homepageLayout.links.length).toBeGreaterThan(0);
-          expect(preset.homepageLayout.widgets.length).toBeGreaterThan(0);
+          expect(preset.homarrLayout).toBeTruthy();
+          expect(preset.homarrLayout.title).toBeTruthy();
+          expect(preset.homarrLayout.links.length).toBeGreaterThan(0);
+          expect(preset.homarrLayout.widgets.length).toBeGreaterThan(0);
         });
 
         it("has all core services enabled", () => {
           expect(preset.services.nextjs).toBe(true);
           expect(preset.services.postgres).toBe(true);
-          expect(preset.services.homepage).toBe(true);
+          expect(preset.services.homarr).toBe(true);
         });
 
         it("has valid bucket names", () => {

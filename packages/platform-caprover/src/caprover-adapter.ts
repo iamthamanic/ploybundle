@@ -107,7 +107,7 @@ export class CaproverAdapter implements PlatformAdapter {
     const running = result.stdout.trim().toLowerCase().includes("up");
 
     return {
-      service: "homepage" as ServiceName,
+      service: "homarr" as ServiceName,
       healthy: running,
       message: running ? "CapRover is running" : "CapRover is not running",
     };
@@ -132,8 +132,8 @@ export class CaproverAdapter implements PlatformAdapter {
       await this.ssh.uploadContent(sshTarget, content, `${PROJECT_DIR}/${name}`);
     }
 
-    // Upload homepage config
-    await this.ssh.uploadContent(sshTarget, artifacts.homepageConfig, `${PROJECT_DIR}/homepage/config.yaml`);
+    // Upload compact Homarr board model for diagnostics/automation
+    await this.ssh.uploadContent(sshTarget, artifacts.homarrConfig, `${PROJECT_DIR}/homarr/seed/board-model.json`);
 
     // Deploy with docker compose
     const deployResult = await this.ssh.exec(
@@ -232,7 +232,7 @@ export class CaproverAdapter implements PlatformAdapter {
   }
 
   private parseContainerStatus(output: string, config: ProjectConfig): ServiceHealth[] {
-    const serviceNames: ServiceName[] = ["nextjs", "postgres", "redis", "directus", "seaweedfs", "windmill", "homepage"];
+    const serviceNames: ServiceName[] = ["nextjs", "postgres", "redis", "directus", "seaweedfs", "windmill", "homarr"];
 
     try {
       // Docker compose ps --format json outputs one JSON object per line

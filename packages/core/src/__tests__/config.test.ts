@@ -25,7 +25,7 @@ describe("parseAndValidateConfig", () => {
     const config = parseAndValidateConfig(validInput);
     expect(config.services.nextjs).toBe(true);
     expect(config.services.postgres).toBe(true);
-    expect(config.services.homepage).toBe(true);
+    expect(config.services.homarr).toBe(true);
   });
 
   it("applies default resource profile", () => {

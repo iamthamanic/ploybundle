@@ -24,7 +24,7 @@ const config: ProjectConfig = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homepage: true,
+    homarr: true,
   },
   buckets: [
     { name: "assets", public: true },
@@ -67,7 +67,7 @@ describe("StackArtifactRenderer", () => {
     expect(artifacts.composeFile).toBeTruthy();
     expect(artifacts.envFiles).toBeTruthy();
     expect(artifacts.configs).toBeTruthy();
-    expect(artifacts.homepageConfig).toBeTruthy();
+    expect(artifacts.homarrConfig).toBeTruthy();
     expect(artifacts.metadata).toBeTruthy();
   });
 
@@ -108,10 +108,10 @@ describe("StackArtifactRenderer", () => {
     expect(artifacts.configs["app/src/app/api/health/route.ts"]).toBeTruthy();
   });
 
-  it("includes homepage config files", () => {
+  it("includes homarr config files", () => {
     const artifacts = renderer.render(config, env);
-    expect(artifacts.configs["homepage/services.yaml"]).toBeTruthy();
-    expect(artifacts.configs["homepage/settings.yaml"]).toBeTruthy();
+    expect(artifacts.configs["homarr/seed/board-model.json"]).toBeTruthy();
+    expect(artifacts.configs["scripts/bootstrap-homarr.sh"]).toBeTruthy();
   });
 
   it("includes project metadata", () => {

@@ -61,7 +61,7 @@ describe("SecretsManager", () => {
         },
         ssh: { host: "1.2.3.4", port: 22, user: "root" },
         email: "admin@test.example.com",
-        services: { nextjs: true, postgres: true, redis: true, directus: true, seaweedfs: true, windmill: true, homepage: true },
+        services: { nextjs: true, postgres: true, redis: true, directus: true, seaweedfs: true, windmill: true, homarr: true },
         buckets: [{ name: "assets", public: false }],
         directus: { adminEmail: "admin@test.example.com" },
         windmill: { workspace: "testproject", exampleFlows: true },

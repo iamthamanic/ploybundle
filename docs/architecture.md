@@ -25,7 +25,7 @@ Ploybundle is a monorepo that generates and deploys isolated, project-scoped app
 │  (command execution, file transfer)          │
 ├──────────────────────────────────────────────┤
 │         Template / Preset System             │
-│  (compose, homepage, service configs)        │
+│  (compose, homarr, service configs)          │
 └──────────────────────────────────────────────┘
 ```
 
@@ -100,7 +100,7 @@ Presets define the "personality" of a project:
 - What buckets to create
 - Which Directus collections to scaffold
 - Which Windmill flows to provision
-- Homepage layout and links
+- Homarr layout and links
 - Next.js app features and env defaults
 
 Presets are data objects, not code generators. They feed into the artifact renderer.
@@ -114,8 +114,8 @@ Presets are data objects, not code generators. They feed into the artifact rende
 ├────────────────────────────────────────────┤
 │  CapRover / Coolify (reverse proxy + TLS)  │
 ├────┬────┬────┬────────┬────────┬───────────┤
-│Home│Next│Dir-│SeaweedFS│Windmill│  Windmill │
-│page│.js │ectus│        │  API   │  Worker   │
+│Homa│Next│Dir-│SeaweedFS│Windmill│  Windmill │
+│rr  │.js │ectus│        │  API   │  Worker   │
 ├────┴────┴──┬─┴────────┴────────┴───────────┤
 │         Postgres        │      Redis        │
 └─────────────────────────┴───────────────────┘

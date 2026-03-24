@@ -3,7 +3,7 @@
 Presets define the shape and personality of a Ploybundle project. Each preset configures:
 - Service defaults (which services are enabled)
 - Seed behavior (buckets, collections, flows)
-- Homepage layout
+- Homarr layout
 - Next.js app features
 - Environment defaults
 

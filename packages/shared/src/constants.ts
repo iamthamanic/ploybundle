@@ -30,7 +30,7 @@ export const ALL_SERVICES: readonly ServiceName[] = [
   "directus",
   "seaweedfs",
   "windmill",
-  "homepage",
+  "homarr",
 ] as const;
 
 export const DEFAULT_SERVICE_TOGGLE = {
@@ -40,7 +40,7 @@ export const DEFAULT_SERVICE_TOGGLE = {
   directus: true,
   seaweedfs: true,
   windmill: true,
-  homepage: true,
+  homarr: true,
 } as const;
 
 export const DEFAULT_SSH_PORT = 22;
@@ -59,7 +59,7 @@ export const SERVICE_PORTS: Record<ServiceName, number> = {
   directus: 8055,
   seaweedfs: 8333,
   windmill: 8000,
-  homepage: 3001,
+  homarr: 3001,
 };
 
 // Required system ports
@@ -77,7 +77,7 @@ export const DOCKER_IMAGES = {
   directus: "directus/directus:11",
   seaweedfs: "chrislusf/seaweedfs:latest",
   windmill: "ghcr.io/windmill-labs/windmill:main",
-  homepage: "ghcr.io/gethomepage/homepage:latest",
+  homarr: "ghcr.io/ajnart/homarr:latest",
 } as const;
 
 // Subdomain conventions

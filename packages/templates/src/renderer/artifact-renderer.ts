@@ -78,13 +78,13 @@ export class StackArtifactRenderer implements ArtifactRenderer {
     }
 
     // Homepage config bundle
-    const homepageFiles = renderFullHomepageBundle(config, preset.homepageLayout);
-    // Combine all homepage yaml files into a single config string for the main field
-    const homepageConfig = homepageFiles["services.yaml"] ?? "";
+    const homepageFiles = renderFullHomepageBundle(config, preset.homarrLayout);
+    // Keep a compact dashboard model for adapter compatibility
+    const homarrConfig = homepageFiles["homarr/seed/board-model.json"] ?? "";
 
     // Add individual homepage files to configs
     for (const [name, content] of Object.entries(homepageFiles)) {
-      configs[`homepage/${name}`] = content;
+      configs[name] = content;
     }
 
     // Project metadata
@@ -103,7 +103,7 @@ export class StackArtifactRenderer implements ArtifactRenderer {
       composeFile,
       envFiles,
       configs,
-      homepageConfig,
+      homarrConfig,
       metadata,
     };
   }

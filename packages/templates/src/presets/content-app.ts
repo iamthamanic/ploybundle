@@ -11,7 +11,7 @@ export const contentAppPreset: PresetDefinition = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homepage: true,
+    homarr: true,
   },
   buckets: [
     { name: "media", public: true },
@@ -87,7 +87,7 @@ export async function main() {
 }`,
     },
   ],
-  homepageLayout: {
+  homarrLayout: {
     title: "Content App",
     subtitle: "Content management and publishing platform powered by Ploybundle",
     links: [

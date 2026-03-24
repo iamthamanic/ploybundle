@@ -13,7 +13,7 @@ export type ServiceName =
   | "directus"
   | "seaweedfs"
   | "windmill"
-  | "homepage";
+  | "homarr";
 
 export type ResourceProfile = "small" | "medium" | "large";
 
@@ -56,7 +56,7 @@ export interface ServiceToggle {
   directus: boolean;
   seaweedfs: boolean;
   windmill: boolean;
-  homepage: boolean;
+  homarr: boolean;
 }
 
 export interface ProjectConfig {
@@ -196,7 +196,7 @@ export interface StackArtifacts {
   composeFile: string;
   envFiles: Record<string, string>;
   configs: Record<string, string>;
-  homepageConfig: string;
+  homarrConfig: string;
   metadata: Record<string, unknown>;
 }
 
@@ -209,7 +209,7 @@ export interface PresetDefinition {
   buckets: BucketDefinition[];
   directusCollections: DirectusCollectionTemplate[];
   windmillFlows: WindmillFlowTemplate[];
-  homepageLayout: HomepageLayoutConfig;
+  homarrLayout: HomepageLayoutConfig;
   envDefaults: Record<string, string>;
   nextjsFeatures: string[];
 }
