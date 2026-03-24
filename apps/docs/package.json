@@ -1,0 +1,11 @@
+{
+  "name": "@ploybundle/docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ploybundle documentation site (future: VitePress or similar)",
+  "scripts": {
+    "build": "echo 'Docs build placeholder - see /docs for markdown sources'",
+    "dev": "echo 'Docs dev placeholder'",
+    "clean": "echo 'clean'"
+  }
+}

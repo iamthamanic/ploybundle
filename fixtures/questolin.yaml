@@ -1,0 +1,42 @@
+projectName: questolin
+target: lite
+preset: learning-app
+domain:
+  root: questolin.example.com
+  app: questolin.example.com
+  admin: admin.questolin.example.com
+  storage: storage.questolin.example.com
+  functions: fn.questolin.example.com
+  deploy: deploy.questolin.example.com
+  dashboard: home.questolin.example.com
+ssh:
+  host: 1.2.3.4
+  port: 22
+  user: root
+email: admin@questolin.example.com
+services:
+  nextjs: true
+  postgres: true
+  redis: true
+  directus: true
+  seaweedfs: true
+  windmill: true
+  homepage: true
+buckets:
+  - name: assets
+    public: true
+  - name: missions
+    public: false
+  - name: uploads
+    public: false
+directus:
+  adminEmail: admin@questolin.example.com
+  collections:
+    - missions
+    - skill_trees
+    - pattern_cards
+windmill:
+  workspace: questolin
+  exampleFlows: true
+resourceProfile: small
+providerHint: hetzner

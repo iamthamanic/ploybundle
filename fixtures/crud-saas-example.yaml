@@ -1,0 +1,30 @@
+projectName: myapp
+target: lite
+preset: crud-saas
+domain:
+  root: myapp.example.com
+ssh:
+  host: 5.6.7.8
+  port: 22
+  user: root
+email: admin@myapp.example.com
+services:
+  nextjs: true
+  postgres: true
+  redis: true
+  directus: true
+  seaweedfs: true
+  windmill: true
+  homepage: true
+buckets:
+  - name: uploads
+    public: false
+  - name: exports
+    public: false
+directus:
+  adminEmail: admin@myapp.example.com
+windmill:
+  workspace: myapp
+  exampleFlows: true
+resourceProfile: small
+providerHint: generic

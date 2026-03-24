@@ -1,0 +1,34 @@
+{
+  "name": "@ploybundle/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ploybundle": "./dist/bin.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ploybundle/shared": "workspace:*",
+    "@ploybundle/core": "workspace:*",
+    "@ploybundle/templates": "workspace:*",
+    "@ploybundle/platform-caprover": "workspace:*",
+    "@ploybundle/platform-coolify": "workspace:*",
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.0",
+    "yaml": "^2.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

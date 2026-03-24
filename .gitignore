@@ -1,0 +1,32 @@
+node_modules/
+dist/
+.turbo/
+*.tsbuildinfo
+
+# Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# State
+.ploybundle-state/
+ploybundle-state.enc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test
+coverage/
+.vitest/
+
+# Build
+*.tgz

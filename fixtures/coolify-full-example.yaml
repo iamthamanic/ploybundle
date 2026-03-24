@@ -1,0 +1,32 @@
+projectName: bigproject
+target: full
+preset: workflow-app
+domain:
+  root: bigproject.example.com
+ssh:
+  host: 9.10.11.12
+  port: 22
+  user: root
+email: admin@bigproject.example.com
+services:
+  nextjs: true
+  postgres: true
+  redis: true
+  directus: true
+  seaweedfs: true
+  windmill: true
+  homepage: true
+buckets:
+  - name: inputs
+    public: false
+  - name: outputs
+    public: false
+  - name: artifacts
+    public: false
+directus:
+  adminEmail: admin@bigproject.example.com
+windmill:
+  workspace: bigproject
+  exampleFlows: true
+resourceProfile: medium
+providerHint: hetzner
