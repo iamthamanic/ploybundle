@@ -59,7 +59,7 @@ export const SERVICE_PORTS: Record<ServiceName, number> = {
   directus: 8055,
   seaweedfs: 8333,
   windmill: 8000,
-  homarr: 3001,
+  homarr: 7575,
 };
 
 // Required system ports
@@ -77,7 +77,7 @@ export const DOCKER_IMAGES = {
   directus: "directus/directus:11",
   seaweedfs: "chrislusf/seaweedfs:latest",
   windmill: "ghcr.io/windmill-labs/windmill:main",
-  homarr: "ghcr.io/ajnart/homarr:latest",
+  homarr: "ghcr.io/homarr-labs/homarr:latest",
 } as const;
 
 // Subdomain conventions

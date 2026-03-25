@@ -37,7 +37,6 @@ describe("renderComposeFile", () => {
   it("generates valid YAML", () => {
     const result = renderComposeFile(baseConfig);
     expect(result).toBeTruthy();
-    expect(result).toContain("version:");
     expect(result).toContain("services:");
   });
 

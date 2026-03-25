@@ -18,6 +18,7 @@ export class SecretsManager {
       windmillSecret: generateSecret(64),
       appSessionSecret: generateSecret(64),
       nextauthSecret: generateSecret(64),
+      homarrEncryptionKey: generateSecret(64),
     };
   }
 
@@ -104,6 +105,9 @@ export class SecretsManager {
       // Project
       PROJECT_NAME: config.projectName,
       NODE_ENV: "production",
+
+      // Homarr v1 (compose uses SECRET_ENCRYPTION_KEY)
+      ...(config.services.homarr ? { HOMARR_ENCRYPTION_KEY: secrets.homarrEncryptionKey } : {}),
     };
   }
 }

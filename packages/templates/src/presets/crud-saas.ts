@@ -72,23 +72,39 @@ export async function main() {
 }`,
     },
   ],
-  homarrLayout: {
+  homarrBoard: {
     title: "CRUD SaaS",
     subtitle: "Multi-tenant SaaS application powered by Ploybundle",
-    links: [
-      { label: "App", url: "{{urls.app}}", icon: "mdi-application", description: "SaaS application" },
-      { label: "Directus Admin", url: "{{urls.admin}}", icon: "mdi-shield-crown", description: "Data & admin backoffice" },
-      { label: "Storage", url: "{{urls.storage}}", icon: "mdi-cloud-upload", description: "File storage" },
-      { label: "Functions", url: "{{urls.functions}}", icon: "mdi-function", description: "Background jobs" },
-      { label: "Deploy", url: "{{urls.deploy}}", icon: "mdi-rocket-launch", description: "Platform control plane" },
+    theme: {
+      primaryColor: "#2563EB",
+      secondaryColor: "#60A5FA",
+      opacity: 100,
+      itemRadius: "md",
+      customCss: `:root { --mantine-color-body: #0a1628; }
+.board-section-title { font-weight: 700; letter-spacing: 0.02em; }`,
+    },
+    sections: [
+      { kind: "category", title: "Overview" },
+      { kind: "category", title: "Data & Content" },
+      { kind: "category", title: "Users & Auth" },
+      { kind: "category", title: "Files" },
+      { kind: "category", title: "Jobs & Functions" },
+      { kind: "category", title: "Deploy" },
+    ],
+    apps: [
+      { name: "SaaS App", description: "Frontend application", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg", href: "{{urls.app}}", pingUrl: "{{urls.app}}/api/health", section: "Overview" },
+      { name: "Directus Admin", description: "Tenant & record management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Data & Content" },
+      { name: "Tenants", description: "Tenant management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/databricks.svg", href: "{{urls.admin}}/content/tenants", section: "Data & Content" },
+      { name: "Records", description: "CRUD records", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/airtable.svg", href: "{{urls.admin}}/content/records", section: "Data & Content" },
+      { name: "Users", description: "User accounts and roles", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg", href: "{{urls.admin}}/users", section: "Users & Auth" },
+      { name: "SeaweedFS", description: "File uploads and exports", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Files" },
+      { name: "Windmill", description: "Data exports, usage aggregation", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Jobs & Functions" },
+      { name: "Deploy Console", description: "Platform control plane", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Deploy" },
     ],
     widgets: [
-      { type: "status", service: "nextjs", label: "App" },
-      { type: "status", service: "directus", label: "Admin" },
-      { type: "status", service: "postgres", label: "Database" },
-      { type: "status", service: "redis", label: "Cache" },
-      { type: "status", service: "seaweedfs", label: "Storage" },
-      { type: "status", service: "windmill", label: "Functions" },
+      { kind: "iframe", section: "Overview", title: "Tenant Overview", config: { embedUrl: "{{urls.admin}}/content/tenants", allowScrolling: true }, grid: { x: 0, y: 0, width: 8, height: 3 } },
+      { kind: "clock", section: "Overview", config: {}, grid: { x: 8, y: 0, width: 2, height: 1 } },
+      { kind: "bookmarks", section: "Overview", title: "Quick Links", config: {}, grid: { x: 8, y: 1, width: 2, height: 2 } },
     ],
   },
   envDefaults: {

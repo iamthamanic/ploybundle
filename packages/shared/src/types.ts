@@ -84,6 +84,7 @@ export interface GeneratedSecrets {
   windmillSecret: string;
   appSessionSecret: string;
   nextauthSecret: string;
+  homarrEncryptionKey: string;
 }
 
 export interface SecretsMetadata {
@@ -209,7 +210,7 @@ export interface PresetDefinition {
   buckets: BucketDefinition[];
   directusCollections: DirectusCollectionTemplate[];
   windmillFlows: WindmillFlowTemplate[];
-  homarrLayout: HomepageLayoutConfig;
+  homarrBoard: HomarrBoardConfig;
   envDefaults: Record<string, string>;
   nextjsFeatures: string[];
 }
@@ -236,24 +237,48 @@ export interface WindmillFlowTemplate {
   content: string;
 }
 
-export interface HomepageLayoutConfig {
+export interface HomarrBoardConfig {
   title: string;
   subtitle: string;
-  links: HomepageLinkConfig[];
-  widgets: HomepageWidgetConfig[];
-  notes?: string[];
+  theme: HomarrThemeConfig;
+  sections: HomarrSectionConfig[];
+  apps: HomarrAppConfig[];
+  widgets: HomarrWidgetConfig[];
 }
 
-export interface HomepageLinkConfig {
-  label: string;
-  url: string;
-  icon?: string;
-  description?: string;
+export interface HomarrThemeConfig {
+  primaryColor: string;
+  secondaryColor: string;
+  opacity: number;
+  itemRadius: "xs" | "sm" | "md" | "lg" | "xl";
+  customCss?: string;
+  logoImageUrl?: string;
+  faviconImageUrl?: string;
+  backgroundImageUrl?: string;
 }
 
-export interface HomepageWidgetConfig {
-  type: "status" | "info" | "quickaction";
-  service?: ServiceName;
-  label: string;
-  config?: Record<string, unknown>;
+export interface HomarrSectionConfig {
+  kind: "category" | "empty";
+  title: string;
+  collapsed?: boolean;
 }
+
+export interface HomarrAppConfig {
+  name: string;
+  description: string;
+  iconUrl: string;
+  href: string;
+  pingUrl?: string;
+  section: string;
+}
+
+export interface HomarrWidgetConfig {
+  kind: "iframe" | "app" | "bookmarks" | "clock" | "weather" | "systemResources" | "systemDisks" | "notebook" | "healthMonitoring" | "coolify";
+  section: string;
+  title?: string;
+  config: Record<string, unknown>;
+  grid?: { x: number; y: number; width: number; height: number };
+}
+
+/** @deprecated Use HomarrBoardConfig */
+export type HomepageLayoutConfig = HomarrBoardConfig;

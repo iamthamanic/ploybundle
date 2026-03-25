@@ -18,6 +18,7 @@ describe("SecretsManager", () => {
       expect(secrets.windmillSecret).toBeTruthy();
       expect(secrets.appSessionSecret).toBeTruthy();
       expect(secrets.nextauthSecret).toBeTruthy();
+      expect(secrets.homarrEncryptionKey).toBeTruthy();
     });
 
     it("generates unique secrets each time", () => {
@@ -80,6 +81,7 @@ describe("SecretsManager", () => {
       expect(env.NEXTAUTH_URL).toBe("https://test.example.com");
       expect(env.PROJECT_NAME).toBe("testproject");
       expect(env.NODE_ENV).toBe("production");
+      expect(env.HOMARR_ENCRYPTION_KEY).toBe(secrets.homarrEncryptionKey);
     });
   });
 });

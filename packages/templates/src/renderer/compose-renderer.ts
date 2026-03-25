@@ -222,26 +222,30 @@ export function renderComposeFile(config: ProjectConfig): string {
     };
   }
 
-  // Homarr
+  // Homarr v1.0 (homarr-labs)
   if (config.services.homarr) {
     compose.services.homarr = {
       image: DOCKER_IMAGES.homarr,
       container_name: `${prefix}-homarr`,
       restart: "unless-stopped",
-      ports: ["3001:3000"],
+      ports: ["7575:7575"],
       volumes: [
-        "./homarr:/appdata",
+        "homarr_data:/appdata",
       ],
-      environment: ["TZ=UTC"],
+      environment: [
+        "TZ=UTC",
+        "SECRET_ENCRYPTION_KEY=${HOMARR_ENCRYPTION_KEY}",
+      ],
       healthcheck: {
-        test: ["CMD-SHELL", "wget --spider -q http://localhost:3000 || exit 1"],
+        test: ["CMD-SHELL", "wget --spider -q http://localhost:7575 || exit 1"],
         interval: "15s",
         timeout: "5s",
-        retries: 3,
-        start_period: "15s",
+        retries: 5,
+        start_period: "30s",
       },
-      deploy: { resources: { limits: { memory: limits.small, cpus: "0.25" } } },
+      deploy: { resources: { limits: { memory: limits.small, cpus: "0.5" } } },
     };
+    compose.volumes.homarr_data = { driver: "local" };
   }
 
   // Add network to all services

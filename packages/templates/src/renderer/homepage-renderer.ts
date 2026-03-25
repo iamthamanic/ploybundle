@@ -1,384 +1,285 @@
-import { stringify as toYaml } from "yaml";
-import type { ProjectConfig, ProjectUrls, HomepageLayoutConfig } from "@ploybundle/shared";
+import type { ProjectConfig, ProjectUrls, HomarrBoardConfig } from "@ploybundle/shared";
 import { buildProjectUrls } from "@ploybundle/shared";
 
-interface HomepageServices {
-  [group: string]: Array<{
-    name: string;
-    href: string;
-    description?: string;
-    icon?: string;
-    server?: string;
-    widget?: {
-      type: string;
-      url?: string;
-      [key: string]: unknown;
-    };
-  }>;
-}
+// ---------------------------------------------------------------------------
+// Public API — consumed by artifact-renderer and orchestrator
+// ---------------------------------------------------------------------------
 
-export function renderHomepageConfig(config: ProjectConfig, layout: HomepageLayoutConfig): string {
-  return renderFullHomepageBundle(config, layout)["homarr-categories.yaml"] ?? "";
-}
-
-export function renderHomepageSettingsYaml(config: ProjectConfig, layout: HomepageLayoutConfig): string {
+/** Render the complete Homarr v1.0 artifact bundle for deployment. */
+export function renderHomarrBundle(config: ProjectConfig, board: HomarrBoardConfig): Record<string, string> {
   const urls = buildProjectUrls(config.domain);
-  return renderHomarrBoardModel(config, layout, urls);
-}
-
-export function renderHomepageWidgetsYaml(_config: ProjectConfig, layout: HomepageLayoutConfig): string {
-  const widgets = {
-    widgets: [
-      {
-        type: "calendar",
-        title: "Project Calendar",
-      },
-      {
-        type: "datetime",
-        title: "Current Time",
-      },
-    ],
-    note: `Homarr dashboard for ${layout.title}`,
-  };
-  return toYaml(widgets, { lineWidth: 120 });
-}
-
-export function renderFullHomepageBundle(config: ProjectConfig, layout: HomepageLayoutConfig): Record<string, string> {
-  const urls = buildProjectUrls(config.domain);
-  const resolvedLinks = layout.links.map((link) => ({ ...link, url: resolveTemplateUrl(link.url, urls) }));
-  const categories = buildPloybundleCategories(urls);
-  const serviceSummary: HomepageServices = {
-    Categories: categories.map((category) => ({
-      name: category.title,
-      href: category.primaryLinks[0]?.url ?? urls.dashboard,
-      description: `${category.description} (${category.serviceBadge})`,
-      icon: "mdi-view-dashboard",
-      server: "homarr",
-    })),
-  };
+  const resolvedBoard = resolveBoard(board, urls);
 
   return {
-    "homarr/migration-analysis.md": renderMigrationAnalysis(layout, resolvedLinks),
-    "homarr/homepage-to-homarr-mapping.md": renderMappingDocument(),
-    "homarr/homarr-categories.yaml": toYaml({ categories }, { lineWidth: 120 }),
-    "homarr/service-summary.yaml": toYaml(serviceSummary, { lineWidth: 120 }),
-    "homarr/seed/board-model.json": renderHomarrBoardModel(config, layout, urls),
-    "homarr/seed/integrations-model.json": renderHomarrIntegrationModel(urls),
-    "scripts/bootstrap-homarr.sh": renderHomarrBootstrapScript(config),
-    "scripts/homarr-api-provision.mjs": renderHomarrApiProvisionScript(),
-    "scripts/rollback-dashboard-homepage.sh": renderRollbackScript(),
-    "docs/homarr-readme.md": renderHomarrReadme(),
+    "homarr/seed/board-provision.json": renderBoardProvisionPayload(config, resolvedBoard),
+    "homarr/seed/apps.json": renderAppsPayload(resolvedBoard),
+    "homarr/seed/board-settings.json": renderBoardSettingsPayload(resolvedBoard),
+    "scripts/bootstrap-homarr.sh": renderBootstrapScript(config),
+    "scripts/homarr-api-provision.mjs": renderProvisionScript(),
   };
 }
 
-function resolveTemplateUrl(template: string, urls: ProjectUrls): string {
+/** Render just the board model JSON (for status / inspect commands). */
+export function renderHomarrBoardJson(config: ProjectConfig, board: HomarrBoardConfig): string {
+  const urls = buildProjectUrls(config.domain);
+  return renderBoardProvisionPayload(config, resolveBoard(board, urls));
+}
+
+// Keep old function names as aliases for backward compatibility
+export function renderHomepageConfig(config: ProjectConfig, board: HomarrBoardConfig): string {
+  return renderHomarrBoardJson(config, board);
+}
+
+export function renderFullHomepageBundle(config: ProjectConfig, board: HomarrBoardConfig): Record<string, string> {
+  return renderHomarrBundle(config, board);
+}
+
+// ---------------------------------------------------------------------------
+// Template URL resolution
+// ---------------------------------------------------------------------------
+
+function resolveTemplate(template: string, urls: ProjectUrls): string {
   return template
-    .replace("{{urls.app}}", urls.app)
-    .replace("{{urls.admin}}", urls.admin)
-    .replace("{{urls.storage}}", urls.storage)
-    .replace("{{urls.functions}}", urls.functions)
-    .replace("{{urls.deploy}}", urls.deploy)
-    .replace("{{urls.dashboard}}", urls.dashboard);
+    .replace(/\{\{urls\.app\}\}/g, urls.app)
+    .replace(/\{\{urls\.admin\}\}/g, urls.admin)
+    .replace(/\{\{urls\.storage\}\}/g, urls.storage)
+    .replace(/\{\{urls\.functions\}\}/g, urls.functions)
+    .replace(/\{\{urls\.deploy\}\}/g, urls.deploy)
+    .replace(/\{\{urls\.dashboard\}\}/g, urls.dashboard);
 }
 
-interface DashboardCategory {
-  title: string;
-  description: string;
-  serviceBadge: string;
-  statusHint: string;
-  primaryLinks: Array<{ label: string; url: string }>;
-  notes?: string;
+function resolveBoard(board: HomarrBoardConfig, urls: ProjectUrls): HomarrBoardConfig {
+  return {
+    ...board,
+    apps: board.apps.map((app) => ({
+      ...app,
+      href: resolveTemplate(app.href, urls),
+      pingUrl: app.pingUrl ? resolveTemplate(app.pingUrl, urls) : undefined,
+    })),
+    widgets: board.widgets.map((w) => ({
+      ...w,
+      config: Object.fromEntries(
+        Object.entries(w.config).map(([k, v]) => [
+          k,
+          typeof v === "string" ? resolveTemplate(v, urls) : v,
+        ])
+      ),
+    })),
+  };
 }
 
-function buildPloybundleCategories(urls: ProjectUrls): DashboardCategory[] {
-  return [
-    {
-      title: "Overview",
-      description: "High-level entry point for app, content, jobs, and deployment surfaces.",
-      serviceBadge: "HUB",
-      statusHint: "Dashboard Reachable",
-      primaryLinks: [
-        { label: "Project Dashboard", url: urls.dashboard },
-        { label: "App Home", url: urls.app },
-        { label: "Deploy Console", url: urls.deploy },
-      ],
-      notes: "Use this as the default landing category for non-technical users.",
-    },
-    {
-      title: "Users & Access",
-      description: "Manage users, roles, policies, and admin authentication.",
-      serviceBadge: "DIRECTUS",
-      statusHint: "Directus Health",
-      primaryLinks: [
-        { label: "Directus Admin", url: urls.admin },
-        { label: "Roles & Permissions", url: `${urls.admin}/settings/roles` },
-        { label: "Users", url: `${urls.admin}/users` },
-      ],
-    },
-    {
-      title: "Data & Content",
-      description: "Operate collections, schema, and content records backed by Postgres.",
-      serviceBadge: "DIRECTUS+POSTGRES",
-      statusHint: "Directus + Postgres",
-      primaryLinks: [
-        { label: "Collections", url: `${urls.admin}/content` },
-        { label: "Data Model", url: `${urls.admin}/settings/data-model` },
-        { label: "Content Editor", url: `${urls.admin}/content` },
-      ],
-    },
-    {
-      title: "Files",
-      description: "Manage object files and media references between SeaweedFS and Directus.",
-      serviceBadge: "SEAWEEDFS+DIRECTUS",
-      statusHint: "Storage API Health",
-      primaryLinks: [
-        { label: "Storage Endpoint", url: urls.storage },
-        { label: "Directus Files", url: `${urls.admin}/files` },
-        { label: "Asset Browser", url: `${urls.admin}/files` },
-      ],
-    },
-    {
-      title: "Jobs & Functions",
-      description: "Run, monitor, and troubleshoot workflow jobs and task execution.",
-      serviceBadge: "WINDMILL",
-      statusHint: "Windmill API Health",
-      primaryLinks: [
-        { label: "Windmill Workspace", url: urls.functions },
-        { label: "Runs", url: `${urls.functions}/runs` },
-        { label: "Schedules", url: `${urls.functions}/schedules` },
-        { label: "Flows", url: `${urls.functions}/flows` },
-      ],
-    },
-    {
-      title: "App",
-      description: "Enter the production-facing Next.js application.",
-      serviceBadge: "NEXTJS",
-      statusHint: "App Health Check",
-      primaryLinks: [
-        { label: "App Home", url: urls.app },
-        { label: "Health Endpoint", url: `${urls.app}/api/health` },
-      ],
-    },
-    {
-      title: "Deploy",
-      description: "Open CapRover or Coolify for deployment and runtime operations.",
-      serviceBadge: "CAPROVER/COOLIFY",
-      statusHint: "Control Plane Reachable",
-      primaryLinks: [
-        { label: "Deploy Console", url: urls.deploy },
-        { label: "Project Services", url: urls.deploy },
-      ],
-    },
-    {
-      title: "Advanced",
-      description: "Power-user shortcuts for direct infrastructure and internals access.",
-      serviceBadge: "ADVANCED",
-      statusHint: "Composite Status",
-      primaryLinks: [
-        { label: "Directus Advanced", url: `${urls.admin}/settings` },
-        { label: "Windmill Scripts", url: `${urls.functions}/scripts` },
-        { label: "Storage Root", url: urls.storage },
-        { label: "Deploy Root", url: urls.deploy },
-      ],
-      notes: "Advanced links keep original UIs as the only source of truth for real work.",
-    },
-  ];
-}
+// ---------------------------------------------------------------------------
+// Homarr v1.0 tRPC API payload generators
+// ---------------------------------------------------------------------------
 
-function renderMigrationAnalysis(layout: HomepageLayoutConfig, resolvedLinks: HomepageLayoutConfig["links"]): string {
-  const lines = [
-    "# Homepage Migration Analysis",
-    "",
-    "## Extracted Homepage Implementation",
-    "- groups: Quick Links",
-    "- services: derived from preset links, rendered into `services.yaml`",
-    "- widgets: greeting and resources widgets",
-    "- links: preset-specific entries resolved via `{{urls.*}}` templates",
-    "- descriptions: each link can include optional description text",
-    "- badges: only bookmark abbreviations, no explicit service badge support",
-    "- status usage: widget declarations are present in presets but not emitted as live checks in generated Homepage files",
-    "- docker label usage: none (docker socket disabled and `docker.yaml` empty)",
-    "- custom CSS/theming: no custom CSS, minimal header layout config only",
-    "- ploybundle-specific categories: only `Quick Links` currently",
-    "",
-    "## Source Layout Context",
-    `- title: ${layout.title}`,
-    `- subtitle: ${layout.subtitle}`,
-    `- link_count: ${resolvedLinks.length}`,
-  ];
-  return lines.join("\n") + "\n";
-}
+function renderBoardProvisionPayload(config: ProjectConfig, board: HomarrBoardConfig): string {
+  const sections = board.sections.map((section, i) => ({
+    id: `section-${i}`,
+    kind: section.kind,
+    name: section.title,
+    collapsed: section.collapsed ?? false,
+    position: i,
+  }));
 
-function renderMappingDocument(): string {
-  return [
-    "# Homepage -> Homarr Concept Mapping",
-    "",
-    "- Homepage groups -> Homarr board sections (category-first cards)",
-    "- Homepage services -> Homarr apps/app tiles (link targets to real tools)",
-    "- Homepage widgets -> Homarr built-in widgets/integrations (calendar, datetime, health checks)",
-    "- Homepage deep links -> Homarr app targets with per-category quick links",
-    "- Homepage status hints -> Homarr integrations and URL health checks",
-    "- Homepage branding -> Homarr title/theme with no custom plugin layer",
-    "",
-    "## Product Rule Preservation",
-    "- Category titles are primary labels for non-technical users.",
-    "- Service name is a compact secondary badge per category.",
-    "- Directus/Windmill/SeaweedFS/CapRover/Coolify remain the working surfaces.",
-    "",
-    "## Graceful Degradation",
-    "- If API provisioning is unavailable, use the generated JSON seed model.",
-    "- If an integration type is unsupported, keep URL links and fallback status text.",
-  ].join("\n") + "\n";
-}
+  const items = board.widgets.map((widget, i) => ({
+    id: `widget-${i}`,
+    kind: widget.kind,
+    options: { title: widget.title, ...widget.config },
+    sectionId: sections.find((s) => s.name === widget.section)?.id ?? sections[0]?.id,
+    layout: widget.grid ?? { x: 0, y: i, width: 10, height: 2 },
+  }));
 
-function renderHomarrBoardModel(config: ProjectConfig, layout: HomepageLayoutConfig, urls: ProjectUrls): string {
-  const categories = buildPloybundleCategories(urls);
   return JSON.stringify(
     {
       board: {
-        slug: `${config.projectName}-hub`,
-        name: `${layout.title} Hub`,
-        description: layout.subtitle,
-        categoryFirst: true,
+        name: `${config.projectName}-hub`,
+        columnCount: 10,
+        isPublic: false,
       },
-      sections: categories.map((category, index) => ({
-        order: index + 1,
-        title: category.title,
-        description: category.description,
-        serviceBadge: category.serviceBadge,
-        statusHint: category.statusHint,
-        links: category.primaryLinks,
-        notes: category.notes ?? "",
-      })),
+      settings: {
+        pageTitle: board.title,
+        metaTitle: `${board.title} — Ploybundle`,
+        primaryColor: board.theme.primaryColor,
+        secondaryColor: board.theme.secondaryColor,
+        opacity: board.theme.opacity,
+        itemRadius: board.theme.itemRadius,
+        customCss: board.theme.customCss ?? "",
+        logoImageUrl: board.theme.logoImageUrl ?? "",
+        faviconImageUrl: board.theme.faviconImageUrl ?? "",
+        backgroundImageUrl: board.theme.backgroundImageUrl ?? "",
+      },
+      sections,
+      items,
     },
     null,
     2
   );
 }
 
-function renderHomarrIntegrationModel(urls: ProjectUrls): string {
+function renderAppsPayload(board: HomarrBoardConfig): string {
+  const apps = board.apps.map((app) => ({
+    name: app.name,
+    description: app.description,
+    iconUrl: app.iconUrl,
+    href: app.href,
+    pingUrl: app.pingUrl ?? null,
+  }));
+
+  return JSON.stringify(apps, null, 2);
+}
+
+function renderBoardSettingsPayload(board: HomarrBoardConfig): string {
   return JSON.stringify(
     {
-      integrations: [
-        { key: "directus", type: "http", target: `${urls.admin}/server/health`, method: "GET" },
-        { key: "windmill", type: "http", target: `${urls.functions}/api/version`, method: "GET" },
-        { key: "seaweedfs", type: "http", target: `${urls.storage}`, method: "GET" },
-        { key: "app", type: "http", target: `${urls.app}/api/health`, method: "GET" },
-      ],
-      notes: "Use Homarr URL monitoring/integrations where available; fallback to link reachability.",
+      primaryColor: board.theme.primaryColor,
+      secondaryColor: board.theme.secondaryColor,
+      opacity: board.theme.opacity,
+      itemRadius: board.theme.itemRadius,
+      customCss: board.theme.customCss ?? "",
+      logoImageUrl: board.theme.logoImageUrl ?? "",
+      faviconImageUrl: board.theme.faviconImageUrl ?? "",
     },
     null,
     2
   );
 }
 
-function renderHomarrBootstrapScript(config: ProjectConfig): string {
+// ---------------------------------------------------------------------------
+// Provisioning scripts
+// ---------------------------------------------------------------------------
+
+function renderBootstrapScript(config: ProjectConfig): string {
   return `#!/usr/bin/env sh
 set -eu
 
 PROJECT_DIR="/opt/ploybundle"
-HOMARR_URL="\${HOMARR_URL:-http://localhost:3001}"
-HOMARR_TOKEN="\${HOMARR_ADMIN_TOKEN:-}"
+HOMARR_URL="\${HOMARR_URL:-http://localhost:7575}"
+HOMARR_API_KEY="\${HOMARR_API_KEY:-}"
 
 echo "[ploybundle] bootstrapping Homarr board for ${config.projectName}"
 
-if [ -z "$HOMARR_TOKEN" ]; then
-  echo "[ploybundle] HOMARR_ADMIN_TOKEN not set. Skipping API provisioning."
-  echo "[ploybundle] You can import $PROJECT_DIR/homarr/seed/board-model.json manually in Homarr."
+if [ -z "$HOMARR_API_KEY" ]; then
+  echo "[ploybundle] HOMARR_API_KEY not set — skipping API provisioning."
+  echo "[ploybundle] Create an admin account at $HOMARR_URL, then generate an API key"
+  echo "[ploybundle] under Settings > API and re-run this script."
+  echo ""
+  echo "[ploybundle] Seed files are at:"
+  echo "  $PROJECT_DIR/homarr/seed/board-provision.json"
+  echo "  $PROJECT_DIR/homarr/seed/apps.json"
   exit 0
 fi
 
-node "$PROJECT_DIR/scripts/homarr-api-provision.mjs" "$HOMARR_URL" "$HOMARR_TOKEN" \\
-  "$PROJECT_DIR/homarr/seed/board-model.json" "$PROJECT_DIR/homarr/seed/integrations-model.json"
+node "$PROJECT_DIR/scripts/homarr-api-provision.mjs" \\
+  "$HOMARR_URL" "$HOMARR_API_KEY" \\
+  "$PROJECT_DIR/homarr/seed/board-provision.json" \\
+  "$PROJECT_DIR/homarr/seed/apps.json" \\
+  "$PROJECT_DIR/homarr/seed/board-settings.json"
 
-echo "[ploybundle] Homarr bootstrap finished."
+echo "[ploybundle] Homarr board provisioned successfully."
 `;
 }
 
-function renderHomarrApiProvisionScript(): string {
+function renderProvisionScript(): string {
   return `#!/usr/bin/env node
 import { readFileSync } from "node:fs";
 
-const [,, homarrUrl, token, boardPath, integrationsPath] = process.argv;
-if (!homarrUrl || !token || !boardPath || !integrationsPath) {
-  console.error("Usage: homarr-api-provision.mjs <homarrUrl> <token> <boardJson> <integrationsJson>");
+const [,, homarrUrl, apiKey, boardPath, appsPath, settingsPath] = process.argv;
+if (!homarrUrl || !apiKey || !boardPath) {
+  console.error("Usage: homarr-api-provision.mjs <homarrUrl> <apiKey> <boardJson> [appsJson] [settingsJson]");
   process.exit(1);
 }
 
-const headers = { "Content-Type": "application/json", Authorization: \`Bearer \${token}\` };
-const board = JSON.parse(readFileSync(boardPath, "utf-8"));
-const integrations = JSON.parse(readFileSync(integrationsPath, "utf-8"));
+const headers = { "Content-Type": "application/json", ApiKey: apiKey };
 
-async function post(path, body) {
-  const res = await fetch(\`\${homarrUrl}\${path}\`, { method: "POST", headers, body: JSON.stringify(body) });
+async function trpc(procedure, input) {
+  const res = await fetch(\`\${homarrUrl}/api/trpc/\${procedure}?batch=1\`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ "0": { json: input } }),
+  });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(\`POST \${path} failed: \${res.status} \${text}\`);
+    throw new Error(\`trpc \${procedure} failed: \${res.status} \${text}\`);
   }
-  return res.json().catch(() => ({}));
+  const data = await res.json();
+  return data[0]?.result?.data?.json ?? data;
 }
 
 async function main() {
+  const payload = JSON.parse(readFileSync(boardPath, "utf-8"));
+
+  // 1. Create board
+  console.log("[ploybundle] Creating board...");
+  let boardId;
   try {
-    await post("/api/v1/boards", board);
+    const result = await trpc("board.createBoard", payload.board);
+    boardId = result?.id;
+    console.log(\`[ploybundle] Board created: \${boardId ?? "(id not returned)"}\`);
   } catch (err) {
-    console.warn("[ploybundle] board provisioning fallback:", err instanceof Error ? err.message : String(err));
+    console.warn("[ploybundle] Board creation failed, trying to find existing...", err.message);
+    try {
+      const existing = await trpc("board.getBoardByName", { name: payload.board.name });
+      boardId = existing?.id;
+      console.log(\`[ploybundle] Found existing board: \${boardId}\`);
+    } catch { /* board lookup also failed — continue without ID */ }
   }
 
-  for (const integration of integrations.integrations ?? []) {
+  // 2. Save board layout (sections + items)
+  if (boardId && payload.sections && payload.items) {
+    console.log("[ploybundle] Saving board layout...");
     try {
-      await post("/api/v1/integrations", integration);
+      await trpc("board.saveBoard", {
+        id: boardId,
+        sections: payload.sections,
+        items: payload.items,
+      });
+      console.log("[ploybundle] Board layout saved.");
     } catch (err) {
-      console.warn("[ploybundle] integration provisioning fallback:", err instanceof Error ? err.message : String(err));
+      console.warn("[ploybundle] Layout save failed:", err.message);
     }
   }
+
+  // 3. Apply board settings (theme, CSS)
+  if (boardId && settingsPath) {
+    console.log("[ploybundle] Applying board settings...");
+    try {
+      const settings = JSON.parse(readFileSync(settingsPath, "utf-8"));
+      await trpc("board.savePartialBoardSettings", { id: boardId, ...settings });
+      console.log("[ploybundle] Board settings applied.");
+    } catch (err) {
+      console.warn("[ploybundle] Settings apply failed:", err.message);
+    }
+  }
+
+  // 4. Create apps
+  if (appsPath) {
+    console.log("[ploybundle] Creating apps...");
+    try {
+      const apps = JSON.parse(readFileSync(appsPath, "utf-8"));
+      await trpc("app.createMany", apps);
+      console.log(\`[ploybundle] \${apps.length} apps created.\`);
+    } catch (err) {
+      console.warn("[ploybundle] App creation failed:", err.message);
+    }
+  }
+
+  // 5. Set as home board
+  if (boardId) {
+    console.log("[ploybundle] Setting as home board...");
+    try {
+      await trpc("board.setHomeBoard", { id: boardId });
+      console.log("[ploybundle] Home board set.");
+    } catch (err) {
+      console.warn("[ploybundle] Set home board failed:", err.message);
+    }
+  }
+
+  console.log("[ploybundle] Provisioning complete.");
 }
 
 main().catch((err) => {
-  console.error("[ploybundle] homarr provisioning error:", err);
+  console.error("[ploybundle] provisioning error:", err);
   process.exit(1);
 });
 `;
-}
-
-function renderRollbackScript(): string {
-  return `#!/usr/bin/env sh
-set -eu
-
-PROJECT_DIR="/opt/ploybundle"
-cd "$PROJECT_DIR"
-
-if [ ! -f docker-compose.yml ]; then
-  echo "[ploybundle] docker-compose.yml not found in $PROJECT_DIR"
-  exit 1
-fi
-
-cp docker-compose.yml docker-compose.homarr.backup.yml
-sed 's/ajnart\\/homarr/gethomepage\\/homepage/g' docker-compose.yml > docker-compose.rollback-homepage.yml
-
-echo "[ploybundle] generated docker-compose.rollback-homepage.yml"
-echo "[ploybundle] to rollback:"
-echo "  cd $PROJECT_DIR && cp docker-compose.rollback-homepage.yml docker-compose.yml && docker compose up -d --remove-orphans"
-`;
-}
-
-function renderHomarrReadme(): string {
-  return [
-    "# Homarr Dashboard (Ploybundle)",
-    "",
-    "Homarr is used as the project hub/navigation shell only.",
-    "Directus, Windmill, SeaweedFS, and CapRover/Coolify remain the operational UIs.",
-    "",
-    "## Provisioning",
-    "1. Deploy stack (`docker compose up -d`).",
-    "2. Set `HOMARR_ADMIN_TOKEN` if API provisioning is enabled.",
-    "3. Run `sh /opt/ploybundle/scripts/bootstrap-homarr.sh`.",
-    "",
-    "## Fallback Behavior",
-    "- If API endpoints differ or are unavailable, import generated seed JSON manually.",
-    "- Status indicators gracefully fall back to simple URL reachability links.",
-    "",
-    "## Rollback",
-    "- Run `sh /opt/ploybundle/scripts/rollback-dashboard-homepage.sh` and apply generated rollback compose file.",
-  ].join("\n") + "\n";
 }

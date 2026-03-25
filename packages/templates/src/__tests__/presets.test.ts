@@ -54,10 +54,13 @@ describe("presets", () => {
           expect(preset.description).toBeTruthy();
           expect(preset.services).toBeTruthy();
           expect(preset.buckets).toBeTruthy();
-          expect(preset.homarrLayout).toBeTruthy();
-          expect(preset.homarrLayout.title).toBeTruthy();
-          expect(preset.homarrLayout.links.length).toBeGreaterThan(0);
-          expect(preset.homarrLayout.widgets.length).toBeGreaterThan(0);
+          expect(preset.homarrBoard).toBeTruthy();
+          expect(preset.homarrBoard.title).toBeTruthy();
+          expect(preset.homarrBoard.theme).toBeTruthy();
+          expect(preset.homarrBoard.theme.primaryColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
+          expect(preset.homarrBoard.sections.length).toBeGreaterThan(0);
+          expect(preset.homarrBoard.apps.length).toBeGreaterThan(0);
+          expect(preset.homarrBoard.widgets.length).toBeGreaterThan(0);
         });
 
         it("has all core services enabled", () => {

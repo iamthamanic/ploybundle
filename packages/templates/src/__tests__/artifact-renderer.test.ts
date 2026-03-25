@@ -108,10 +108,27 @@ describe("StackArtifactRenderer", () => {
     expect(artifacts.configs["app/src/app/api/health/route.ts"]).toBeTruthy();
   });
 
-  it("includes homarr config files", () => {
+  it("includes homarr v1.0 provisioning files", () => {
     const artifacts = renderer.render(config, env);
-    expect(artifacts.configs["homarr/seed/board-model.json"]).toBeTruthy();
+    expect(artifacts.configs["homarr/seed/board-provision.json"]).toBeTruthy();
+    expect(artifacts.configs["homarr/seed/apps.json"]).toBeTruthy();
+    expect(artifacts.configs["homarr/seed/board-settings.json"]).toBeTruthy();
     expect(artifacts.configs["scripts/bootstrap-homarr.sh"]).toBeTruthy();
+    expect(artifacts.configs["scripts/homarr-api-provision.mjs"]).toBeTruthy();
+  });
+
+  it("renders homarr board with resolved URLs", () => {
+    const artifacts = renderer.render(config, env);
+    const boardJson = artifacts.configs["homarr/seed/board-provision.json"];
+    expect(boardJson).toContain("questolin-hub");
+    expect(boardJson).not.toContain("{{urls.");
+  });
+
+  it("renders homarr apps with ping URLs", () => {
+    const artifacts = renderer.render(config, env);
+    const appsJson = artifacts.configs["homarr/seed/apps.json"];
+    expect(appsJson).toContain("admin.questolin.example.com");
+    expect(appsJson).not.toContain("{{urls.");
   });
 
   it("includes project metadata", () => {

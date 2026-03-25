@@ -3,7 +3,7 @@ import { buildEnvFile } from "@ploybundle/shared";
 import type { ArtifactRenderer } from "@ploybundle/core";
 import { getPreset } from "../presets/index.js";
 import { renderComposeFile } from "./compose-renderer.js";
-import { renderFullHomepageBundle } from "./homepage-renderer.js";
+import { renderHomarrBundle, renderHomarrBoardJson } from "./homepage-renderer.js";
 import { renderSeaweedfsConfig, renderBucketInitScript } from "./seaweedfs-renderer.js";
 import { renderDirectusEnv, renderDirectusBootstrapScript, renderDirectusRolesScript } from "./directus-renderer.js";
 import { renderWindmillBootstrapScript, renderWindmillEnv } from "./windmill-renderer.js";
@@ -77,13 +77,11 @@ export class StackArtifactRenderer implements ArtifactRenderer {
       configs["app/.env.local"] = renderNextjsEnvLocal(config);
     }
 
-    // Homepage config bundle
-    const homepageFiles = renderFullHomepageBundle(config, preset.homarrLayout);
-    // Keep a compact dashboard model for adapter compatibility
-    const homarrConfig = homepageFiles["homarr/seed/board-model.json"] ?? "";
+    // Homarr v1.0 board artifacts
+    const homarrFiles = renderHomarrBundle(config, preset.homarrBoard);
+    const homarrConfig = renderHomarrBoardJson(config, preset.homarrBoard);
 
-    // Add individual homepage files to configs
-    for (const [name, content] of Object.entries(homepageFiles)) {
+    for (const [name, content] of Object.entries(homarrFiles)) {
       configs[name] = content;
     }
 
