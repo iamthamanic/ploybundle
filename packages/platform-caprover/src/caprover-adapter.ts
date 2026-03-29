@@ -8,9 +8,8 @@ import type {
   StackArtifacts,
   ProjectUrls,
   ProjectStatus,
-  ServiceName,
 } from "@ploybundle/shared";
-import { PlatformError, buildProjectUrls } from "@ploybundle/shared";
+import { PlatformError, buildProjectUrls, isStackServiceEnabled, listStackServices } from "@ploybundle/shared";
 import { SshService } from "@ploybundle/core";
 
 const CAPROVER_INSTALL_SCRIPT = `
@@ -107,7 +106,7 @@ export class CaproverAdapter implements PlatformAdapter {
     const running = result.stdout.trim().toLowerCase().includes("up");
 
     return {
-      service: "homarr" as ServiceName,
+      service: "hub",
       healthy: running,
       message: running ? "CapRover is running" : "CapRover is not running",
     };
@@ -132,8 +131,8 @@ export class CaproverAdapter implements PlatformAdapter {
       await this.ssh.uploadContent(sshTarget, content, `${PROJECT_DIR}/${name}`);
     }
 
-    // Upload compact Homarr board model for diagnostics/automation
-    await this.ssh.uploadContent(sshTarget, artifacts.homarrConfig, `${PROJECT_DIR}/homarr/seed/board-model.json`);
+    // Upload hub board.json for diagnostics/automation (same schema as container expects)
+    await this.ssh.uploadContent(sshTarget, artifacts.hubConfig, `${PROJECT_DIR}/hub/config/board.json`);
 
     // Deploy with docker compose
     const deployResult = await this.ssh.exec(
@@ -182,7 +181,7 @@ export class CaproverAdapter implements PlatformAdapter {
     };
   }
 
-  async fetchLogs(sshTarget: SshTarget, config: ProjectConfig, service?: ServiceName): Promise<string> {
+  async fetchLogs(sshTarget: SshTarget, config: ProjectConfig, service?: string): Promise<string> {
     const serviceFlag = service ? ` ${service}` : "";
     const result = await this.ssh.exec(
       sshTarget,
@@ -218,13 +217,14 @@ export class CaproverAdapter implements PlatformAdapter {
 
     return {
       projectName: config.projectName,
+      mode: config.mode,
       target: config.target,
-      preset: config.preset,
+      preset: config.template?.name ?? config.preset,
       services,
       urls,
       configSummary: {
-        target: config.target,
-        preset: config.preset,
+        target: config.target ?? "",
+        preset: config.template?.name ?? config.preset,
         domain: config.domain.root,
         resourceProfile: config.resourceProfile,
       },
@@ -232,8 +232,7 @@ export class CaproverAdapter implements PlatformAdapter {
   }
 
   private parseContainerStatus(output: string, config: ProjectConfig): ServiceHealth[] {
-    const serviceNames: ServiceName[] = ["nextjs", "postgres", "redis", "directus", "seaweedfs", "windmill", "homarr"];
-
+    const services = listStackServices(config);
     try {
       // Docker compose ps --format json outputs one JSON object per line
       const containers = output
@@ -242,16 +241,21 @@ export class CaproverAdapter implements PlatformAdapter {
         .filter((line) => line.startsWith("{"))
         .map((line) => JSON.parse(line) as { Name: string; State: string; Status: string });
 
-      return serviceNames.map((service) => {
+      if (output.trim() && containers.length === 0) {
+        throw new Error("No container status JSON found");
+      }
+
+      return services.map((service) => {
         const container = containers.find((c) =>
           c.Name.toLowerCase().includes(service)
         );
+        const enabled = isStackServiceEnabled(config, service);
 
         if (!container) {
           return {
             service,
-            healthy: !config.services[service],
-            message: config.services[service] ? "Not found" : "Disabled",
+            healthy: !enabled,
+            message: enabled ? "Not found" : "Disabled",
           };
         }
 
@@ -262,7 +266,7 @@ export class CaproverAdapter implements PlatformAdapter {
         };
       });
     } catch {
-      return serviceNames.map((service) => ({
+      return services.map((service) => ({
         service,
         healthy: false,
         message: "Unable to determine status",

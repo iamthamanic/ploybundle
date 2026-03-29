@@ -1,4 +1,5 @@
 import type { PresetDefinition } from "@ploybundle/shared";
+import { PLOYBUNDLE_HUB_SECTIONS } from "./hub-defaults.js";
 
 export const crudSaasPreset: PresetDefinition = {
   name: "crud-saas",
@@ -11,7 +12,8 @@ export const crudSaasPreset: PresetDefinition = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homarr: true,
+    hub: true,
+    adminer: false,
   },
   buckets: [
     { name: "uploads", public: false },
@@ -72,7 +74,7 @@ export async function main() {
 }`,
     },
   ],
-  homarrBoard: {
+  hubBoard: {
     title: "CRUD SaaS",
     subtitle: "Multi-tenant SaaS application powered by Ploybundle",
     theme: {
@@ -83,23 +85,21 @@ export async function main() {
       customCss: `:root { --mantine-color-body: #0a1628; }
 .board-section-title { font-weight: 700; letter-spacing: 0.02em; }`,
     },
-    sections: [
-      { kind: "category", title: "Overview" },
-      { kind: "category", title: "Data & Content" },
-      { kind: "category", title: "Users & Auth" },
-      { kind: "category", title: "Files" },
-      { kind: "category", title: "Jobs & Functions" },
-      { kind: "category", title: "Deploy" },
-    ],
+    sections: PLOYBUNDLE_HUB_SECTIONS,
     apps: [
-      { name: "SaaS App", description: "Frontend application", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg", href: "{{urls.app}}", pingUrl: "{{urls.app}}/api/health", section: "Overview" },
-      { name: "Directus Admin", description: "Tenant & record management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Data & Content" },
-      { name: "Tenants", description: "Tenant management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/databricks.svg", href: "{{urls.admin}}/content/tenants", section: "Data & Content" },
-      { name: "Records", description: "CRUD records", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/airtable.svg", href: "{{urls.admin}}/content/records", section: "Data & Content" },
-      { name: "Users", description: "User accounts and roles", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg", href: "{{urls.admin}}/users", section: "Users & Auth" },
-      { name: "SeaweedFS", description: "File uploads and exports", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Files" },
-      { name: "Windmill", description: "Data exports, usage aggregation", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Jobs & Functions" },
-      { name: "Deploy Console", description: "Platform control plane", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Deploy" },
+      { name: "Product (Next.js)", description: "Main application URL", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg", href: "{{urls.app}}", pingUrl: "{{urls.app}}/api/health", section: "Frontend" },
+      { name: "Directus Admin", description: "Collections & admin API", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Backend" },
+      { name: "Tenants", description: "Tenant directory", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/databricks.svg", href: "{{urls.admin}}/content/tenants", section: "Backend" },
+      { name: "Records", description: "Shared CRUD records", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/airtable.svg", href: "{{urls.admin}}/content/records", section: "Backend" },
+      { name: "Users & roles", description: "Accounts, roles, access", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg", href: "{{urls.admin}}/users", section: "Backend" },
+      { name: "Storage (S3)", description: "Buckets and object API", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Backend" },
+      { name: "File manager", description: "Assets in Directus", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/files.svg", href: "{{urls.admin}}/files", section: "Backend" },
+      { name: "Windmill", description: "Jobs, exports, aggregation", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Backend" },
+      { name: "Deploy console", description: "CapRover / Coolify", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Deploy" },
+      { name: "Directus (full admin)", description: "Raw Directus console", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Backend" },
+      { name: "Windmill (workspace)", description: "Raw Windmill UI", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Backend" },
+      { name: "SeaweedFS", description: "Raw storage endpoint", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Backend" },
+      { name: "Deploy platform", description: "Infrastructure UI", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Backend" },
     ],
     widgets: [
       { kind: "iframe", section: "Overview", title: "Tenant Overview", config: { embedUrl: "{{urls.admin}}/content/tenants", allowScrolling: true }, grid: { x: 0, y: 0, width: 8, height: 3 } },

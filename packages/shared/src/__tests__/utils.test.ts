@@ -3,7 +3,9 @@ import {
   generateSecret,
   generatePassword,
   buildDomainConfig,
+  buildLocalDomainConfig,
   buildProjectUrls,
+  listStackServices,
   slugify,
   parseSshTarget,
   formatDuration,
@@ -57,6 +59,15 @@ describe("buildDomainConfig", () => {
   });
 });
 
+describe("buildLocalDomainConfig", () => {
+  it("defaults to numeric loopback hosts for docker-friendly browser URLs", () => {
+    const d = buildLocalDomainConfig();
+    expect(d.root).toBe("127.0.0.1");
+    expect(d.app).toBe("127.0.0.1:3001");
+    expect(d.admin).toBe("127.0.0.1:8055");
+  });
+});
+
 describe("buildProjectUrls", () => {
   it("builds HTTPS URLs from domain config", () => {
     const domain = buildDomainConfig("test.io");
@@ -64,7 +75,95 @@ describe("buildProjectUrls", () => {
     expect(urls.app).toBe("https://test.io");
     expect(urls.admin).toBe("https://admin.test.io");
     expect(urls.storage).toBe("https://storage.test.io");
+    expect(urls.storageBrowser).toBe("https://storage.test.io");
     expect(urls.functions).toBe("https://fn.test.io");
+  });
+
+  it("builds HTTP URLs when scheme is http (e.g. local docker ports)", () => {
+    const urls = buildProjectUrls(
+      buildDomainConfig("localhost", {
+        scheme: "http",
+        app: "localhost:3000",
+        admin: "localhost:8055",
+        storage: "localhost:8333",
+        storageBrowser: "localhost:9333",
+        functions: "localhost:8000",
+        deploy: "localhost",
+        dashboard: "localhost:7575",
+      })
+    );
+    expect(urls.app).toBe("http://localhost:3000");
+    expect(urls.admin).toBe("http://localhost:8055");
+    expect(urls.storage).toBe("http://localhost:8333");
+    expect(urls.storageBrowser).toBe("http://localhost:9333");
+    expect(urls.functions).toBe("http://localhost:8000");
+  });
+
+  it("adds databaseBrowser URL when domain.databaseBrowser is set", () => {
+    const urls = buildProjectUrls(
+      buildDomainConfig("localhost", {
+        scheme: "http",
+        databaseBrowser: "localhost:8088",
+      })
+    );
+    expect(urls.databaseBrowser).toBe("http://localhost:8088");
+  });
+});
+
+describe("listStackServices", () => {
+  it("includes dynamic custom api and worker services from AppSpec", () => {
+    const services = listStackServices({
+      projectName: "visudev",
+      mode: "server",
+      target: "lite",
+      preset: "workflow-app",
+      frontend: "nextjs",
+      domain: buildDomainConfig("visudev.example.com"),
+      ssh: { host: "1.2.3.4", port: 22, user: "root" },
+      projectRoot: "/tmp/visudev",
+      email: "admin@visudev.example.com",
+      services: {
+        nextjs: true,
+        postgres: true,
+        redis: true,
+        directus: true,
+        seaweedfs: true,
+        windmill: true,
+        hub: true,
+        adminer: false,
+      },
+      buckets: [],
+      directus: { adminEmail: "admin@visudev.example.com" },
+      windmill: { workspace: "visudev", exampleFlows: true },
+      resourceProfile: "small",
+      providerHint: "generic",
+      appSpec: {
+        version: 2,
+        app: {
+          id: "visudev",
+          name: "VisuDEV",
+          archetype: "tool",
+          frontend: "nextjs",
+        },
+        modes: {
+          local: { enabled: true },
+          server: {
+            enabled: true,
+            target: "lite",
+            ssh: { host: "1.2.3.4", port: 22, user: "root" },
+            domain: { root: "visudev.example.com" },
+          },
+        },
+        modules: {
+          database: { enabled: true, provider: "postgres" },
+          customApis: [{ id: "core", enabled: true, runtime: "node", path: "services/api" }],
+          workers: [{ id: "preview-runner", enabled: true, runtime: "node", kind: "long-running", path: "services/preview-runner" }],
+        },
+      },
+    });
+
+    expect(services).toContain("custom-api-core");
+    expect(services).toContain("worker-preview-runner");
   });
 });
 
@@ -128,6 +227,10 @@ describe("envLine", () => {
 
   it("quotes values with spaces", () => {
     expect(envLine("KEY", "hello world")).toBe('KEY="hello world"');
+  });
+
+  it("escapes dollars for Docker Compose .env interpolation", () => {
+    expect(envLine("REDIS_PASSWORD", "pre$post")).toBe("REDIS_PASSWORD=pre$$post"); // two $ in file for Compose
   });
 });
 

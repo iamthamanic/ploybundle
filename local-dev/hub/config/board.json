@@ -1,0 +1,237 @@
+{
+  "projectName": "localdev",
+  "mode": "local",
+  "target": "lite",
+  "preset": "crud-saas",
+  "productFrontend": "nextjs",
+  "domainRoot": "127.0.0.1",
+  "urls": {
+    "app": "http://127.0.0.1:3001",
+    "admin": "http://127.0.0.1:8055",
+    "storage": "http://127.0.0.1:8333",
+    "storageBrowser": "http://127.0.0.1:9333",
+    "functions": "http://127.0.0.1:8000",
+    "deploy": "http://127.0.0.1:3001",
+    "dashboard": "http://127.0.0.1:7580",
+    "databaseBrowser": "http://127.0.0.1:8088"
+  },
+  "productDeploymentUrls": {
+    "serverProd": "",
+    "serverTest": ""
+  },
+  "bucketCount": 2,
+  "displayName": "",
+  "repositoryUrl": "",
+  "title": "Ploybundle",
+  "subtitle": "Work here first: live status by area, module summaries, and hub actions. Provider consoles are linked under Advanced when you need the native UI.",
+  "theme": {
+    "primaryColor": "#0d9488",
+    "secondaryColor": "#5eead4",
+    "opacity": 100,
+    "itemRadius": "md"
+  },
+  "sections": [
+    {
+      "kind": "overview",
+      "id": "overview",
+      "title": "Overview",
+      "summary": "Project status, health by area, and curated links into your stack."
+    },
+    {
+      "kind": "empty",
+      "id": "frontend-group",
+      "title": "Frontend"
+    },
+    {
+      "kind": "empty",
+      "id": "backend-group",
+      "title": "Backend"
+    },
+    {
+      "kind": "category",
+      "id": "app",
+      "title": "App",
+      "serviceBadge": "Next.js",
+      "summary": "App UI, preview, runtime checks, and frontend workflows."
+    },
+    {
+      "kind": "category",
+      "id": "auth",
+      "title": "Auth",
+      "serviceBadge": "Directus",
+      "summary": "Users, roles, access control, and identity flows."
+    },
+    {
+      "kind": "category",
+      "id": "database",
+      "title": "Database",
+      "serviceBadge": "Directus + Postgres",
+      "summary": "Collections, schema, records, SQL browser, and data operations."
+    },
+    {
+      "kind": "category",
+      "id": "functions",
+      "title": "Functions",
+      "serviceBadge": "Windmill",
+      "summary": "Flows, scripts, API triggers, and execution endpoints."
+    },
+    {
+      "kind": "category",
+      "id": "storage",
+      "title": "Storage",
+      "serviceBadge": "SeaweedFS + Directus Files",
+      "summary": "Object storage, file browser, and asset management."
+    },
+    {
+      "kind": "category",
+      "id": "jobs",
+      "title": "Jobs",
+      "serviceBadge": "Windmill Schedules",
+      "summary": "Cron jobs, queues, run history, and operational tasks."
+    },
+    {
+      "kind": "category",
+      "id": "logs",
+      "title": "Logs",
+      "serviceBadge": "Docker",
+      "summary": "Recent container logs (when enabled) and CLI fallbacks."
+    },
+    {
+      "kind": "category",
+      "id": "deploy",
+      "title": "Deploy",
+      "serviceBadge": "CapRover / Coolify",
+      "summary": "Current deploy, logs, env, restart / redeploy."
+    },
+    {
+      "kind": "category",
+      "id": "settings",
+      "title": "Settings",
+      "serviceBadge": "Project",
+      "summary": "Board config and safe environment hints (no secret values)."
+    }
+  ],
+  "apps": [
+    {
+      "name": "Product app (Next.js)",
+      "description": "Your web UI (Next.js or Vite + React — set `frontend` in ploybundle.yaml)",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg",
+      "href": "http://127.0.0.1:3001",
+      "pingUrl": "http://127.0.0.1:3001/api/health",
+      "section": "App"
+    },
+    {
+      "name": "Auth · Users & roles",
+      "description": "Accounts and permissions",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg",
+      "href": "http://127.0.0.1:8055/admin/users",
+      "section": "Auth",
+      "providerConsole": true
+    },
+    {
+      "name": "Directus Admin",
+      "description": "CMS, schema, API",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg",
+      "href": "http://127.0.0.1:8055/admin",
+      "pingUrl": "http://127.0.0.1:8055/server/health",
+      "section": "Database",
+      "providerConsole": true
+    },
+    {
+      "name": "Collections",
+      "description": "All models and content",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/databricks.svg",
+      "href": "http://127.0.0.1:8055/admin/content",
+      "section": "Database",
+      "providerConsole": true
+    },
+    {
+      "name": "Postgres (Adminer)",
+      "description": "Raw SQL in the browser. Adminer has no own login: use PostgreSQL credentials — POSTGRES_USER (= project name), POSTGRES_PASSWORD, POSTGRES_DB from .env. Server preset: postgres.",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/postgresql.svg",
+      "href": "http://127.0.0.1:8088/?pgsql=postgres&username=localdev&db=localdev",
+      "pingUrl": "http://127.0.0.1:8088",
+      "section": "Database",
+      "providerConsole": true
+    },
+    {
+      "name": "Storage (SeaweedFS)",
+      "description": "Cluster browser UI. Raw S3 API for apps is linked under Backend.",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg",
+      "href": "http://127.0.0.1:9333",
+      "pingUrl": "http://127.0.0.1:9333",
+      "section": "Storage",
+      "providerConsole": true
+    },
+    {
+      "name": "File library",
+      "description": "Assets in Directus",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/files.svg",
+      "href": "http://127.0.0.1:8055/admin/files",
+      "section": "Functions"
+    },
+    {
+      "name": "Windmill",
+      "description": "Automations workspace. Self-hosted: complete first-time signup in the UI for your operator account; WINDMILL_SECRET / SUPERADMIN_SECRET is for API/bootstrap, not the browser password.",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg",
+      "href": "http://127.0.0.1:8000",
+      "pingUrl": "http://127.0.0.1:8000/api/version",
+      "section": "Jobs",
+      "providerConsole": true
+    },
+    {
+      "name": "Schedules & flows",
+      "description": "Cron and runs",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/clockify.svg",
+      "href": "http://127.0.0.1:8000/schedules",
+      "section": "Jobs",
+      "providerConsole": true
+    },
+    {
+      "name": "Deploy console",
+      "description": "CapRover, Coolify, or your control plane",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg",
+      "href": "http://127.0.0.1:3001",
+      "section": "Deploy",
+      "providerConsole": true
+    },
+    {
+      "name": "S3 API (raw)",
+      "description": "S3 REST endpoint for integrations (browser view is expected to be limited).",
+      "iconUrl": "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg",
+      "href": "http://127.0.0.1:8333",
+      "pingUrl": "http://127.0.0.1:8333",
+      "section": "Storage",
+      "providerConsole": true
+    }
+  ],
+  "widgets": [
+    {
+      "kind": "open_link",
+      "section": "Overview",
+      "title": "Database & CMS area",
+      "config": {
+        "href": "/database",
+        "blurb": "Stay in the hub first: open the Database area for module status, metrics, and curated shortcuts. Directus: ADMIN_EMAIL / ADMIN_PASSWORD (or DIRECTUS_*) in .env. Adminer: POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB — no separate Adminer account."
+      },
+      "grid": {
+        "x": 0,
+        "y": 0,
+        "width": 8,
+        "height": 3
+      }
+    },
+    {
+      "kind": "clock",
+      "section": "Overview",
+      "config": {},
+      "grid": {
+        "x": 8,
+        "y": 0,
+        "width": 2,
+        "height": 1
+      }
+    }
+  ],
+  "projectsRegistry": []
+}

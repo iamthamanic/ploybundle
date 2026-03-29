@@ -23,15 +23,16 @@ async function confirmDestroy(projectName: string): Promise<boolean> {
 
 export function registerDestroyCommand(program: Command, context: CliContext): void {
   program
-    .command("destroy <project-name>")
+    .command("destroy [project-name]")
     .description("Destroy the project stack (requires confirmation)")
     .option("--yes", "Skip confirmation prompt")
+    .option("--mode <mode>", "Run against mode: local or server")
     .option("--config <path>", "Path to ploybundle.yaml", CONFIG_FILENAME)
-    .action(async (projectName: string, options: Record<string, string | boolean>) => {
+    .action(async (projectName: string | undefined, options: Record<string, string | boolean>) => {
       const output = new CliOutput(context);
 
       try {
-        const config = resolveProjectConfig(projectName, options.config as string);
+        const config = resolveProjectConfig(projectName, options.config as string, options.mode as string | undefined);
 
         if (!options.yes) {
           const confirmed = await confirmDestroy(config.projectName);
@@ -43,7 +44,7 @@ export function registerDestroyCommand(program: Command, context: CliContext): v
 
         output.info(`Destroying project: ${config.projectName}`);
 
-        const adapter = createAdapter(config.target);
+        const adapter = createAdapter(config);
         const renderer = new StackArtifactRenderer();
         const orchestrator = new Orchestrator(adapter, renderer, {
           onPhaseStart: (_phase, message) => output.spinner(message).start(),

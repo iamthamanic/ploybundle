@@ -14,6 +14,10 @@ dist/
 .ploybundle-state/
 ploybundle-state.enc
 
+# Reference stack under local-dev/ (materialized builds)
+local-dev/**/.next/
+local-dev/.claude-flow/
+
 # OS
 .DS_Store
 Thumbs.db

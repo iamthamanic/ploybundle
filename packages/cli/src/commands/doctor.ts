@@ -8,34 +8,42 @@ import { resolveProjectConfig } from "../config-resolver.js";
 
 export function registerDoctorCommand(program: Command, context: CliContext): void {
   program
-    .command("doctor <project-name>")
+    .command("doctor [project-name]")
     .description("Diagnose host, platform, services, DNS, and configuration")
+    .option("--mode <mode>", "Run against mode: local or server")
     .option("--config <path>", "Path to ploybundle.yaml", CONFIG_FILENAME)
-    .action(async (projectName: string, options: Record<string, string>) => {
+    .action(async (projectName: string | undefined, options: Record<string, string>) => {
       const output = new CliOutput(context);
 
       try {
-        const config = resolveProjectConfig(projectName, options.config);
-        output.info(`Running diagnostics for: ${config.projectName}`);
+        const config = resolveProjectConfig(projectName, options.config, options.mode);
+        output.info(`Running diagnostics for: ${config.projectName} (${config.mode} mode)`);
         output.log("");
 
-        const ssh = new SshService();
-        const inspector = new HostInspector(ssh);
+        const adapter = createAdapter(config);
+        let diagnosis;
+        let validation = { valid: true, issues: [] as string[] };
 
-        // 1. SSH connectivity
-        output.info("Checking SSH connectivity...");
-        const connected = await ssh.testConnection(config.ssh);
-        if (connected) {
-          output.success("SSH connection successful");
+        if (config.mode === "server") {
+          const ssh = new SshService();
+          const inspector = new HostInspector(ssh);
+
+          output.info("Checking SSH connectivity...");
+          const connected = await ssh.testConnection(config.ssh);
+          if (connected) {
+            output.success("SSH connection successful");
+          } else {
+            output.error(`Cannot connect to ${config.ssh.user}@${config.ssh.host}:${config.ssh.port}`);
+            process.exit(1);
+          }
+
+          output.info("Inspecting host...");
+          diagnosis = await inspector.inspect(config.ssh);
+          validation = inspector.validate(diagnosis);
         } else {
-          output.error(`Cannot connect to ${config.ssh.user}@${config.ssh.host}:${config.ssh.port}`);
-          process.exit(1);
+          output.info("Inspecting local runtime...");
+          diagnosis = await adapter.validateHost(config.ssh);
         }
-
-        // 2. Host inspection
-        output.info("Inspecting host...");
-        const diagnosis = await inspector.inspect(config.ssh);
-        const validation = inspector.validate(diagnosis);
 
         if (context.outputMode === "json") {
           output.json({ diagnosis, validation });
@@ -65,7 +73,6 @@ export function registerDoctorCommand(program: Command, context: CliContext): vo
 
         // 3. Platform health
         output.info("Checking platform health...");
-        const adapter = createAdapter(config.target);
         const platformHealth = await adapter.platformHealth(config.ssh);
         if (platformHealth.healthy) {
           output.success(`${adapter.name} is healthy`);
@@ -82,8 +89,11 @@ export function registerDoctorCommand(program: Command, context: CliContext): vo
 
         // 5. Config integrity
         output.info("Checking configuration...");
-        output.success(`Target: ${config.target}`);
-        output.success(`Preset: ${config.preset}`);
+        output.success(`Mode: ${config.mode}`);
+        if (config.target) {
+          output.success(`Target: ${config.target}`);
+        }
+        output.success(`Preset: ${config.template?.name ?? config.preset}`);
         output.success(`Domain: ${config.domain.root}`);
         output.success(`Resource profile: ${config.resourceProfile}`);
 

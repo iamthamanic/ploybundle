@@ -1,4 +1,5 @@
 import type { PresetDefinition } from "@ploybundle/shared";
+import { PLOYBUNDLE_HUB_SECTIONS } from "./hub-defaults.js";
 
 export const learningAppPreset: PresetDefinition = {
   name: "learning-app",
@@ -11,7 +12,8 @@ export const learningAppPreset: PresetDefinition = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homarr: true,
+    hub: true,
+    adminer: false,
   },
   buckets: [
     { name: "assets", public: true },
@@ -171,7 +173,7 @@ export async function main(event: {
 }`,
     },
   ],
-  homarrBoard: {
+  hubBoard: {
     title: "Learning App",
     subtitle: "Gamified learning platform powered by Ploybundle",
     theme: {
@@ -182,31 +184,28 @@ export async function main(event: {
       customCss: `:root { --mantine-color-body: #0f0a1e; }
 .board-section-title { font-weight: 700; letter-spacing: 0.02em; }`,
     },
-    sections: [
-      { kind: "category", title: "Overview" },
-      { kind: "category", title: "Data & Content" },
-      { kind: "category", title: "Users & Auth" },
-      { kind: "category", title: "Files" },
-      { kind: "category", title: "Jobs & Functions" },
-      { kind: "category", title: "Deploy" },
-    ],
+    sections: PLOYBUNDLE_HUB_SECTIONS,
     apps: [
-      { name: "Learning App", description: "Frontend application", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg", href: "{{urls.app}}", pingUrl: "{{urls.app}}/api/health", section: "Overview" },
-      { name: "Directus Admin", description: "Content & user management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Data & Content" },
-      { name: "Collections", description: "Missions, skill trees, pattern cards", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/databricks.svg", href: "{{urls.admin}}/content", section: "Data & Content" },
-      { name: "Users", description: "User accounts and roles", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg", href: "{{urls.admin}}/users", section: "Users & Auth" },
-      { name: "Roles", description: "Permission roles", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shieldsdotio.svg", href: "{{urls.admin}}/settings/roles", section: "Users & Auth" },
-      { name: "SeaweedFS", description: "Asset & mission media storage", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Files" },
-      { name: "File Manager", description: "Browse uploaded files", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/files.svg", href: "{{urls.admin}}/files", section: "Files" },
-      { name: "Windmill", description: "XP recalc, reviews, notifications", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Jobs & Functions" },
-      { name: "Schedules", description: "Cron jobs and scheduled tasks", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/clockify.svg", href: "{{urls.functions}}/schedules", section: "Jobs & Functions" },
-      { name: "Deploy Console", description: "Platform control plane", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Deploy" },
+      { name: "Learning App", description: "Player & feed (Next.js)", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg", href: "{{urls.app}}", pingUrl: "{{urls.app}}/api/health", section: "Frontend" },
+      { name: "Directus Admin", description: "Missions & skills data", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Backend" },
+      { name: "Collections", description: "All collections", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/databricks.svg", href: "{{urls.admin}}/content", section: "Backend" },
+      { name: "Users", description: "Learner accounts", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg", href: "{{urls.admin}}/users", section: "Backend" },
+      { name: "Roles", description: "Permission templates", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/shieldsdotio.svg", href: "{{urls.admin}}/settings/roles", section: "Backend" },
+      { name: "SeaweedFS", description: "Mission media buckets", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Backend" },
+      { name: "File Manager", description: "Directus library", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/files.svg", href: "{{urls.admin}}/files", section: "Backend" },
+      { name: "Windmill", description: "XP, reviews, notifications", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Backend" },
+      { name: "Schedules", description: "Cron & reminders", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/clockify.svg", href: "{{urls.functions}}/schedules", section: "Backend" },
+      { name: "Deploy console", description: "CapRover / Coolify", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Deploy" },
+      { name: "Directus (full admin)", description: "Raw CMS", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Backend" },
+      { name: "Windmill (workspace)", description: "Raw automation", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Backend" },
+      { name: "SeaweedFS (raw)", description: "Object storage", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Backend" },
+      { name: "Deploy platform", description: "Infrastructure UI", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Backend" },
     ],
     widgets: [
       { kind: "iframe", section: "Overview", title: "Content Preview", config: { embedUrl: "{{urls.admin}}/content/missions", allowScrolling: true }, grid: { x: 0, y: 0, width: 8, height: 3 } },
       { kind: "clock", section: "Overview", config: {}, grid: { x: 8, y: 0, width: 2, height: 1 } },
       { kind: "bookmarks", section: "Overview", title: "Quick Links", config: {}, grid: { x: 8, y: 1, width: 2, height: 2 } },
-      { kind: "iframe", section: "Jobs & Functions", title: "Recent Runs", config: { embedUrl: "{{urls.functions}}/runs", allowScrolling: true }, grid: { x: 0, y: 0, width: 10, height: 3 } },
+      { kind: "iframe", section: "Backend", title: "Recent Runs", config: { embedUrl: "{{urls.functions}}/runs", allowScrolling: true }, grid: { x: 0, y: 0, width: 10, height: 3 } },
     ],
   },
   envDefaults: {

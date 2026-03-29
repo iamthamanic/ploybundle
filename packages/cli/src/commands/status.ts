@@ -7,15 +7,16 @@ import { resolveProjectConfig } from "../config-resolver.js";
 
 export function registerStatusCommand(program: Command, context: CliContext): void {
   program
-    .command("status <project-name>")
+    .command("status [project-name]")
     .description("Show project status, service health, and URLs")
+    .option("--mode <mode>", "Run against mode: local or server")
     .option("--config <path>", "Path to ploybundle.yaml", CONFIG_FILENAME)
-    .action(async (projectName: string, options: Record<string, string>) => {
+    .action(async (projectName: string | undefined, options: Record<string, string>) => {
       const output = new CliOutput(context);
 
       try {
-        const config = resolveProjectConfig(projectName, options.config);
-        const adapter = createAdapter(config.target);
+        const config = resolveProjectConfig(projectName, options.config, options.mode);
+        const adapter = createAdapter(config);
         const status = await adapter.status(config.ssh, config);
         output.printStatus(status);
       } catch (err) {

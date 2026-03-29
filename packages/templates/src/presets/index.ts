@@ -4,6 +4,7 @@ import { learningAppPreset } from "./learning-app.js";
 import { crudSaasPreset } from "./crud-saas.js";
 import { contentAppPreset } from "./content-app.js";
 import { workflowAppPreset } from "./workflow-app.js";
+import { PLATFORM_HUB_BOARD } from "./platform-hub-board.js";
 
 const presetRegistry: ReadonlyMap<PresetName, PresetDefinition> = new Map([
   ["learning-app", learningAppPreset],
@@ -27,4 +28,4 @@ export function listPresets(): PresetDefinition[] {
   return [...presetRegistry.values()];
 }
 
-export { learningAppPreset, crudSaasPreset, contentAppPreset, workflowAppPreset };
+export { learningAppPreset, crudSaasPreset, contentAppPreset, workflowAppPreset, PLATFORM_HUB_BOARD };

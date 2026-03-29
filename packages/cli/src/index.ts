@@ -9,6 +9,8 @@ import { registerUpdateCommand } from "./commands/update.js";
 import { registerDestroyCommand } from "./commands/destroy.js";
 import { registerDoctorCommand } from "./commands/doctor.js";
 import { registerOpenCommand } from "./commands/open.js";
+import { registerPromoteCommand } from "./commands/promote.js";
+import { registerImportSupabaseCommand } from "./commands/import-supabase.js";
 
 export function createCli(): Command {
   const program = new Command();
@@ -50,6 +52,8 @@ export function createCli(): Command {
   registerDestroyCommand(program, defaultContext);
   registerDoctorCommand(program, defaultContext);
   registerOpenCommand(program, defaultContext);
+  registerPromoteCommand(program, defaultContext);
+  registerImportSupabaseCommand(program, defaultContext);
 
   return program;
 }

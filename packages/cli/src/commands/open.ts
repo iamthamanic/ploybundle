@@ -11,24 +11,29 @@ const SERVICE_URL_MAP: Record<string, keyof ReturnType<typeof buildProjectUrls>>
   directus: "admin",
   storage: "storage",
   seaweedfs: "storage",
+  "storage-ui": "storageBrowser",
+  "seaweed-ui": "storageBrowser",
+  sql: "databaseBrowser",
+  adminer: "databaseBrowser",
   functions: "functions",
   windmill: "functions",
   deploy: "deploy",
   dashboard: "dashboard",
-  homarr: "dashboard",
+  hub: "dashboard",
 };
 
 export function registerOpenCommand(program: Command, context: CliContext): void {
   program
-    .command("open <project-name>")
+    .command("open [project-name]")
     .description("Open the project dashboard or a specific service URL in the browser")
     .option("--service <service>", "Open a specific service: app, admin, storage, functions, deploy, dashboard")
+    .option("--mode <mode>", "Run against mode: local or server")
     .option("--config <path>", "Path to ploybundle.yaml", CONFIG_FILENAME)
-    .action(async (projectName: string, options: Record<string, string>) => {
+    .action(async (projectName: string | undefined, options: Record<string, string>) => {
       const output = new CliOutput(context);
 
       try {
-        const config = resolveProjectConfig(projectName, options.config);
+        const config = resolveProjectConfig(projectName, options.config, options.mode);
         const urls = buildProjectUrls(config.domain);
 
         let url: string;
@@ -39,7 +44,12 @@ export function registerOpenCommand(program: Command, context: CliContext): void
             output.log(`  Available: ${Object.keys(SERVICE_URL_MAP).join(", ")}`);
             process.exit(1);
           }
-          url = urls[key];
+          const resolved = urls[key];
+          if (!resolved) {
+            output.error(`No URL configured for "${options.service}" (try enabling Adminer / database UI in your stack).`);
+            process.exit(1);
+          }
+          url = resolved;
         } else {
           url = urls.dashboard;
         }

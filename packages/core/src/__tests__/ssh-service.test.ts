@@ -2,7 +2,7 @@ import { vi, beforeEach } from "vitest";
 import { SshError } from "@ploybundle/shared";
 import type { SshTarget } from "@ploybundle/shared";
 
-// Mock node:child_process before importing SshService
+// Mock callback-style execFile before importing SshService
 vi.mock("node:child_process", () => ({
   execFile: vi.fn(),
 }));
@@ -10,29 +10,29 @@ vi.mock("node:child_process", () => ({
 import { execFile } from "node:child_process";
 import { SshService } from "../ssh/ssh-service.js";
 
-// Helper to set up the promisified mock behaviour.
-// `promisify(execFile)` returns a function that mirrors
-// execFile but returns a Promise.  We mock the underlying
-// callback-based `execFile` so that the promisified wrapper
-// resolves / rejects as expected.
+function getExecFileCallback(args: unknown[]): Function | undefined {
+  const last = args[args.length - 1];
+  return typeof last === "function" ? (last as Function) : undefined;
+}
+
 function mockExecFileResolve(stdout: string, stderr = "") {
-  (execFile as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-    (_cmd: string, _args: string[], _opts: unknown, cb: Function) => {
-      cb(null, stdout, stderr);
-    },
-  );
+  (execFile as unknown as ReturnType<typeof vi.fn>).mockImplementation((...args: unknown[]) => {
+    const cb = getExecFileCallback(args);
+    if (cb) cb(null, stdout, stderr);
+  });
 }
 
 function mockExecFileReject(error: { code?: number | string; stdout?: string; stderr?: string; message?: string }) {
-  (execFile as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-    (_cmd: string, _args: string[], _opts: unknown, cb: Function) => {
-      const err: Record<string, unknown> = new Error(error.message ?? "command failed");
-      if (error.code !== undefined) err.code = error.code;
-      if (error.stdout !== undefined) err.stdout = error.stdout;
-      if (error.stderr !== undefined) err.stderr = error.stderr;
-      cb(err);
-    },
-  );
+  (execFile as unknown as ReturnType<typeof vi.fn>).mockImplementation((...args: unknown[]) => {
+    const cb = getExecFileCallback(args);
+    if (!cb) return;
+    const err = Object.assign(new Error(error.message ?? "command failed"), {
+      ...(error.code !== undefined ? { code: error.code } : {}),
+      ...(error.stdout !== undefined ? { stdout: error.stdout } : {}),
+      ...(error.stderr !== undefined ? { stderr: error.stderr } : {}),
+    });
+    cb(err);
+  });
 }
 
 const target: SshTarget = {
@@ -86,11 +86,10 @@ describe("SshService", () => {
     });
 
     it("throws SshError when the error has no code property", async () => {
-      (execFile as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (_cmd: string, _args: string[], _opts: unknown, cb: Function) => {
-          cb(new Error("timeout"));
-        },
-      );
+      (execFile as unknown as ReturnType<typeof vi.fn>).mockImplementation((...args: unknown[]) => {
+        const cb = getExecFileCallback(args);
+        if (cb) cb(new Error("timeout"));
+      });
 
       await expect(ssh.exec(target, "echo test")).rejects.toThrow(SshError);
     });
@@ -111,6 +110,18 @@ describe("SshService", () => {
       expect(args).toContain("StrictHostKeyChecking=accept-new");
       expect(args).toContain("root@10.0.0.1");
       expect(args[args.length - 1]).toBe("whoami");
+    });
+
+    it("respects timeout overrides for long-running commands", async () => {
+      mockExecFileResolve("ok");
+
+      await ssh.exec(target, "sleep 1", { timeoutMs: 1234, maxBuffer: 2048 });
+
+      const call = (execFile as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+      const [, , options] = call as [string, string[], { timeout: number; maxBuffer: number }];
+
+      expect(options.timeout).toBe(1234);
+      expect(options.maxBuffer).toBe(2048);
     });
 
     it("does not include -i flag when privateKeyPath is absent", async () => {
@@ -185,6 +196,21 @@ describe("SshService", () => {
       expect(args).not.toContain("-i");
       expect(args).toContain("-P");
       expect(args[args.indexOf("-P") + 1]).toBe("2222");
+    });
+
+    it("uses upload timeout overrides when provided", async () => {
+      mockExecFileResolve("");
+
+      await ssh.uploadFile(target, "/tmp/local.tar.gz", "/opt/remote.tar.gz", {
+        timeoutMs: 4321,
+        maxBuffer: 4096,
+      });
+
+      const call = (execFile as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+      const [, , options] = call as [string, string[], { timeout: number; maxBuffer: number }];
+
+      expect(options.timeout).toBe(4321);
+      expect(options.maxBuffer).toBe(4096);
     });
 
     it("throws SshError on scp failure", async () => {

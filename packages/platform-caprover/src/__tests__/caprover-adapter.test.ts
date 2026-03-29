@@ -4,7 +4,7 @@ import type {
   StackArtifacts,
   SshTarget,
 } from "@ploybundle/shared";
-import { PlatformError } from "@ploybundle/shared";
+import { ALL_SERVICES, PlatformError, isStackServiceEnabled } from "@ploybundle/shared";
 import { CaproverAdapter } from "../caprover-adapter.js";
 
 // ---------------------------------------------------------------------------
@@ -26,10 +26,13 @@ const testSsh: SshTarget = { host: "1.2.3.4", port: 22, user: "root" };
 
 const testConfig: ProjectConfig = {
   projectName: "test-project",
+  mode: "server",
   target: "lite",
   preset: "learning-app",
+  frontend: "nextjs",
   domain: { root: "example.com" },
   ssh: { host: "1.2.3.4", port: 22, user: "root" },
+  projectRoot: "/tmp/test-project",
   email: "test@example.com",
   services: {
     nextjs: true,
@@ -38,7 +41,8 @@ const testConfig: ProjectConfig = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homarr: true,
+    hub: true,
+    adminer: false,
   },
   buckets: [],
   directus: { adminEmail: "admin@example.com" },
@@ -51,7 +55,7 @@ const testArtifacts: StackArtifacts = {
   composeFile: "version: '3'",
   envFiles: { ".env": "KEY=value" },
   configs: { "config.yaml": "key: value" },
-  homarrConfig: "{\"board\":true}",
+  hubConfig: "{\"board\":true}",
   metadata: {},
 };
 
@@ -227,7 +231,7 @@ describe("CaproverAdapter", () => {
       expect(mockSsh.uploadContent).toHaveBeenCalledWith(
         testSsh,
         "{\"board\":true}",
-        "/opt/ploybundle/homarr/seed/board-model.json",
+        "/opt/ploybundle/hub/config/board.json",
       );
 
       // Verify docker compose up was called
@@ -326,6 +330,7 @@ describe("CaproverAdapter", () => {
       expect(urls.app).toBe("https://example.com");
       expect(urls.admin).toBe("https://admin.example.com");
       expect(urls.storage).toBe("https://storage.example.com");
+      expect(urls.storageBrowser).toBe("https://storage.example.com");
       expect(urls.functions).toBe("https://fn.example.com");
       expect(urls.deploy).toBe("https://deploy.example.com");
       expect(urls.dashboard).toBe("https://home.example.com");
@@ -364,7 +369,7 @@ describe("CaproverAdapter", () => {
         '{"Name":"test-project-directus-1","State":"running","Status":"Up 5 minutes"}',
         '{"Name":"test-project-seaweedfs-1","State":"running","Status":"Up 5 minutes"}',
         '{"Name":"test-project-windmill-1","State":"running","Status":"Up 5 minutes"}',
-        '{"Name":"test-project-homarr-1","State":"running","Status":"Up 5 minutes"}',
+        '{"Name":"test-project-hub-1","State":"running","Status":"Up 5 minutes"}',
       ].join("\n");
 
       mockSsh.exec.mockResolvedValue({
@@ -378,7 +383,7 @@ describe("CaproverAdapter", () => {
       expect(status.projectName).toBe("test-project");
       expect(status.target).toBe("lite");
       expect(status.preset).toBe("learning-app");
-      expect(status.services).toHaveLength(7);
+      expect(status.services).toHaveLength(ALL_SERVICES.length);
       expect(status.services.every((s) => s.healthy)).toBe(true);
       expect(status.urls.app).toBe("https://example.com");
       expect(status.configSummary).toEqual({
@@ -416,9 +421,10 @@ describe("CaproverAdapter", () => {
 
       const status = await adapter.status(testSsh, testConfig);
 
-      expect(status.services).toHaveLength(7);
-      expect(status.services.every((s) => !s.healthy)).toBe(true);
-      expect(status.services[0]!.message).toBe("Not found");
+      expect(status.services).toHaveLength(ALL_SERVICES.length);
+      const enabled = status.services.filter((s) => isStackServiceEnabled(testConfig, s.service));
+      expect(enabled.every((s) => !s.healthy)).toBe(true);
+      expect(status.services.find((s) => s.service === "nextjs")?.message).toBe("Unable to determine status");
     });
   });
 

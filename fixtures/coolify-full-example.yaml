@@ -15,7 +15,7 @@ services:
   directus: true
   seaweedfs: true
   windmill: true
-  homarr: true
+  hub: true
 buckets:
   - name: inputs
     public: false

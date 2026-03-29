@@ -1,15 +1,32 @@
 import type { ProjectConfig, WindmillFlowTemplate } from "@ploybundle/shared";
 
+/** Runs once on empty Postgres data dir; creates DB for Windmill only. */
+export function renderWindmillPostgresInitSql(config: ProjectConfig): string {
+  const windmillDb = `${config.projectName}_windmill`;
+  const owner = config.projectName;
+  const q = (id: string) => `"${id.replace(/"/g, '""')}"`;
+  return `-- Windmill uses this database; Directus uses POSTGRES_DB (${config.projectName}).
+CREATE DATABASE ${q(windmillDb)} OWNER ${q(owner)};
+`;
+}
+
 export function renderWindmillBootstrapScript(
   config: ProjectConfig,
   flows: WindmillFlowTemplate[]
 ): string {
   const workspace = config.windmill.workspace;
+  const toWindmillCron = (raw: string): string => {
+    const parts = raw.trim().split(/\s+/);
+    // Windmill expects 6-part cron (seconds first); convert common 5-part crons.
+    if (parts.length === 5) return `0 ${raw.trim()}`;
+    return raw.trim();
+  };
 
   const flowScripts = flows.map((flow) => {
     const pathName = flow.name.replace(/_/g, "-");
 
     if (flow.type === "cron" && flow.schedule) {
+      const cron = toWindmillCron(flow.schedule);
       return `
 echo "Creating cron script: ${flow.name}"
 curl -s -X POST "$WINDMILL_URL/api/w/${workspace}/scripts/create" \\
@@ -30,7 +47,8 @@ curl -s -X POST "$WINDMILL_URL/api/w/${workspace}/schedules/create" \\
   -H "Content-Type: application/json" \\
   -d '{
     "path": "f/${workspace}/${pathName}",
-    "schedule": "${flow.schedule}",
+    "schedule": "${cron}",
+    "timezone": "UTC",
     "script_path": "f/${workspace}/${pathName}",
     "is_flow": false,
     "enabled": true
@@ -69,7 +87,7 @@ echo "Windmill is ready."
 echo "Creating workspace: ${workspace}"
 WM_TOKEN="\${WINDMILL_SECRET}"
 
-curl -s -X POST "$WINDMILL_URL/api/workspaces/create" \\
+curl -sf -X POST "$WINDMILL_URL/api/workspaces/create" \\
   -H "Authorization: Bearer $WM_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"id":"${workspace}","name":"${config.projectName}"}' \\
@@ -77,7 +95,7 @@ curl -s -X POST "$WINDMILL_URL/api/workspaces/create" \\
 
 # Add DATABASE_URL as a variable
 echo "Setting workspace variables..."
-curl -s -X POST "$WINDMILL_URL/api/w/${workspace}/variables/create" \\
+curl -sf -X POST "$WINDMILL_URL/api/w/${workspace}/variables/create" \\
   -H "Authorization: Bearer $WM_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"path":"f/${workspace}/database_url","value":"'"$DATABASE_URL"'","is_secret":true,"description":"PostgreSQL connection string"}' \\

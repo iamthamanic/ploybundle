@@ -9,17 +9,18 @@ import { resolveProjectConfig } from "../config-resolver.js";
 
 export function registerUpdateCommand(program: Command, context: CliContext): void {
   program
-    .command("update <project-name>")
+    .command("update [project-name]")
     .description("Update the project stack (preserves config and secrets)")
+    .option("--mode <mode>", "Run against mode: local or server")
     .option("--config <path>", "Path to ploybundle.yaml", CONFIG_FILENAME)
-    .action(async (projectName: string, options: Record<string, string>) => {
+    .action(async (projectName: string | undefined, options: Record<string, string>) => {
       const output = new CliOutput(context);
 
       try {
-        const config = resolveProjectConfig(projectName, options.config);
-        output.info(`Updating project: ${config.projectName}`);
+        const config = resolveProjectConfig(projectName, options.config, options.mode);
+        output.info(`Updating project: ${config.projectName} (${config.mode} mode)`);
 
-        const adapter = createAdapter(config.target);
+        const adapter = createAdapter(config);
         const renderer = new StackArtifactRenderer();
         const orchestrator = new Orchestrator(adapter, renderer, {
           onPhaseStart: (_phase, message) => output.spinner(message).start(),

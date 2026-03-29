@@ -18,7 +18,13 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md,yaml}\""
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,yaml}\"",
+    "local-dev:stack": "node scripts/materialize-local-stack.mjs",
+    "local-dev:up": "node scripts/stack-docker-up.mjs",
+    "docker:up": "node scripts/stack-docker-up.mjs",
+    "demo:user": "node scripts/user-demo.mjs",
+    "verify:control-plane": "node scripts/verify-control-plane.mjs",
+    "ci:verify": "pnpm run test && pnpm run verify:control-plane"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

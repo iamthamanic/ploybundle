@@ -1,8 +1,28 @@
-import type { ServiceName, PlatformTarget, PresetName, ResourceProfile, ProviderHint } from "./types.js";
+import type {
+  ServiceName,
+  PlatformTarget,
+  PresetName,
+  ResourceProfile,
+  ProviderHint,
+  ProjectMode,
+  ProductFrontend,
+  AppArchetype,
+  AppRuntime,
+  DashboardArea,
+  DashboardRunAction,
+  CustomApiFramework,
+  WorkerKind,
+  RealtimeChannelTransport,
+  RealtimeSubscribeAcl,
+  RealtimePublishAcl,
+  RealtimePresenceScope,
+  RealtimeEventOrigin,
+} from "./types.js";
 
 export const PLOYBUNDLE_VERSION = "0.1.0";
 
 export const VALID_TARGETS: readonly PlatformTarget[] = ["lite", "full"] as const;
+export const VALID_MODES: readonly ProjectMode[] = ["local", "server"] as const;
 
 export const VALID_PRESETS: readonly PresetName[] = [
   "learning-app",
@@ -23,14 +43,84 @@ export const VALID_PROVIDER_HINTS: readonly ProviderHint[] = [
   "generic",
 ] as const;
 
+export const VALID_PRODUCT_FRONTENDS: readonly ProductFrontend[] = ["nextjs", "vite-react"] as const;
+export const VALID_APP_ARCHETYPES: readonly AppArchetype[] = [
+  "crud",
+  "content",
+  "catalog",
+  "tool",
+  "workflow",
+  "studio",
+  "agent-platform",
+  "custom",
+] as const;
+export const VALID_APP_RUNTIMES: readonly AppRuntime[] = ["node", "deno", "python"] as const;
+export const VALID_DASHBOARD_AREAS: readonly DashboardArea[] = [
+  "app",
+  "auth",
+  "data",
+  "storage",
+  "jobs",
+  "workers",
+  "deploy",
+  "ops",
+] as const;
+export const VALID_DASHBOARD_RUN_ACTIONS: readonly DashboardRunAction[] = [
+  "deploy",
+  "restart",
+  "run-job",
+  "rotate-secret",
+] as const;
+export const VALID_CUSTOM_API_FRAMEWORKS: readonly CustomApiFramework[] = [
+  "hono",
+  "express",
+  "fastapi",
+  "none",
+] as const;
+export const VALID_WORKER_KINDS: readonly WorkerKind[] = [
+  "background",
+  "long-running",
+  "specialized",
+] as const;
+export const VALID_REALTIME_CHANNEL_TRANSPORTS: readonly RealtimeChannelTransport[] = [
+  "sse",
+  "websocket",
+  "hybrid",
+] as const;
+export const VALID_REALTIME_SUBSCRIBE_ACLS: readonly RealtimeSubscribeAcl[] = [
+  "public",
+  "authenticated",
+  "user",
+  "team",
+] as const;
+export const VALID_REALTIME_PUBLISH_ACLS: readonly RealtimePublishAcl[] = [
+  "service",
+  "authenticated",
+  "user",
+  "team",
+] as const;
+export const VALID_REALTIME_PRESENCE_SCOPES: readonly RealtimePresenceScope[] = [
+  "user",
+  "workspace",
+] as const;
+export const VALID_REALTIME_EVENT_ORIGINS: readonly RealtimeEventOrigin[] = [
+  "system",
+  "client",
+  "worker",
+  "service",
+] as const;
+
+export const DEFAULT_PRODUCT_FRONTEND: ProductFrontend = "nextjs";
+
 export const ALL_SERVICES: readonly ServiceName[] = [
   "nextjs",
+  "vite",
   "postgres",
   "redis",
   "directus",
   "seaweedfs",
   "windmill",
-  "homarr",
+  "hub",
 ] as const;
 
 export const DEFAULT_SERVICE_TOGGLE = {
@@ -40,12 +130,14 @@ export const DEFAULT_SERVICE_TOGGLE = {
   directus: true,
   seaweedfs: true,
   windmill: true,
-  homarr: true,
+  hub: true,
+  adminer: false,
 } as const;
 
 export const DEFAULT_SSH_PORT = 22;
 
 export const DEFAULT_RESOURCE_PROFILE: ResourceProfile = "small";
+export const DEFAULT_MODE: ProjectMode = "server";
 
 export const DEFAULT_PROVIDER_HINT: ProviderHint = "generic";
 
@@ -54,12 +146,13 @@ export const DEFAULT_WINDMILL_WORKSPACE = "ploybundle";
 // Default ports for services
 export const SERVICE_PORTS: Record<ServiceName, number> = {
   nextjs: 3000,
+  vite: 3000,
   postgres: 5432,
   redis: 6379,
   directus: 8055,
   seaweedfs: 8333,
   windmill: 8000,
-  homarr: 7575,
+  hub: 7575,
 };
 
 // Required system ports
@@ -76,8 +169,8 @@ export const DOCKER_IMAGES = {
   redis: "redis:7-alpine",
   directus: "directus/directus:11",
   seaweedfs: "chrislusf/seaweedfs:latest",
-  windmill: "ghcr.io/windmill-labs/windmill:main",
-  homarr: "ghcr.io/homarr-labs/homarr:latest",
+  /** Pinned release — `:main` is volatile and often breaks local healthchecks. */
+  windmill: "ghcr.io/windmill-labs/windmill:1.659",
 } as const;
 
 // Subdomain conventions

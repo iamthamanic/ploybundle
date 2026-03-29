@@ -1,4 +1,5 @@
 import type { PresetDefinition } from "@ploybundle/shared";
+import { PLOYBUNDLE_HUB_SECTIONS } from "./hub-defaults.js";
 
 export const contentAppPreset: PresetDefinition = {
   name: "content-app",
@@ -11,7 +12,8 @@ export const contentAppPreset: PresetDefinition = {
     directus: true,
     seaweedfs: true,
     windmill: true,
-    homarr: true,
+    hub: true,
+    adminer: false,
   },
   buckets: [
     { name: "media", public: true },
@@ -87,7 +89,7 @@ export async function main() {
 }`,
     },
   ],
-  homarrBoard: {
+  hubBoard: {
     title: "Content App",
     subtitle: "Content management and publishing platform powered by Ploybundle",
     theme: {
@@ -98,30 +100,27 @@ export async function main() {
       customCss: `:root { --mantine-color-body: #041f14; }
 .board-section-title { font-weight: 700; letter-spacing: 0.02em; }`,
     },
-    sections: [
-      { kind: "category", title: "Overview" },
-      { kind: "category", title: "Data & Content" },
-      { kind: "category", title: "Users & Auth" },
-      { kind: "category", title: "Files" },
-      { kind: "category", title: "Jobs & Functions" },
-      { kind: "category", title: "Deploy" },
-    ],
+    sections: PLOYBUNDLE_HUB_SECTIONS,
     apps: [
-      { name: "Content App", description: "Frontend application", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg", href: "{{urls.app}}", pingUrl: "{{urls.app}}/api/health", section: "Overview" },
-      { name: "Directus CMS", description: "Content management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Data & Content" },
-      { name: "Articles", description: "Article management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/medium.svg", href: "{{urls.admin}}/content/articles", section: "Data & Content" },
-      { name: "Pages", description: "Static page management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/notion.svg", href: "{{urls.admin}}/content/pages", section: "Data & Content" },
-      { name: "Users", description: "User accounts and roles", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg", href: "{{urls.admin}}/users", section: "Users & Auth" },
-      { name: "Media Library", description: "Images, thumbnails, uploads", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Files" },
-      { name: "File Manager", description: "Browse all files", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/files.svg", href: "{{urls.admin}}/files", section: "Files" },
-      { name: "Windmill", description: "Thumbnail generation, publishing", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Jobs & Functions" },
-      { name: "Deploy Console", description: "Platform control plane", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Deploy" },
+      { name: "Content App", description: "Next.js front-end", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/nextdotjs.svg", href: "{{urls.app}}", pingUrl: "{{urls.app}}/api/health", section: "Frontend" },
+      { name: "Directus CMS", description: "Headless content", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Backend" },
+      { name: "Articles", description: "Editorial content", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/medium.svg", href: "{{urls.admin}}/content/articles", section: "Backend" },
+      { name: "Pages", description: "Structured pages", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/notion.svg", href: "{{urls.admin}}/content/pages", section: "Backend" },
+      { name: "Users & roles", description: "Access management", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/auth0.svg", href: "{{urls.admin}}/users", section: "Backend" },
+      { name: "Media Library", description: "Object storage buckets", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Backend" },
+      { name: "File Manager", description: "Directus file library", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/files.svg", href: "{{urls.admin}}/files", section: "Backend" },
+      { name: "Windmill", description: "Thumbnails & publishing jobs", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Backend" },
+      { name: "Deploy console", description: "CapRover / Coolify", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Deploy" },
+      { name: "Directus (full admin)", description: "Raw CMS console", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/directus.svg", href: "{{urls.admin}}", pingUrl: "{{urls.admin}}/server/health", section: "Backend" },
+      { name: "Windmill (workspace)", description: "Raw automation UI", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/windowsterminal.svg", href: "{{urls.functions}}", pingUrl: "{{urls.functions}}/api/version", section: "Backend" },
+      { name: "SeaweedFS", description: "Raw storage", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/amazons3.svg", href: "{{urls.storage}}", pingUrl: "{{urls.storage}}", section: "Backend" },
+      { name: "Deploy platform", description: "Infrastructure UI", iconUrl: "https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/docker.svg", href: "{{urls.deploy}}", section: "Backend" },
     ],
     widgets: [
       { kind: "iframe", section: "Overview", title: "Recent Articles", config: { embedUrl: "{{urls.admin}}/content/articles", allowScrolling: true }, grid: { x: 0, y: 0, width: 8, height: 3 } },
       { kind: "clock", section: "Overview", config: {}, grid: { x: 8, y: 0, width: 2, height: 1 } },
       { kind: "bookmarks", section: "Overview", title: "Quick Links", config: {}, grid: { x: 8, y: 1, width: 2, height: 2 } },
-      { kind: "iframe", section: "Files", title: "Media Browser", config: { embedUrl: "{{urls.admin}}/files", allowScrolling: true }, grid: { x: 0, y: 0, width: 10, height: 3 } },
+      { kind: "iframe", section: "Backend", title: "Media Browser", config: { embedUrl: "{{urls.admin}}/files", allowScrolling: true }, grid: { x: 0, y: 0, width: 10, height: 3 } },
     ],
   },
   envDefaults: {

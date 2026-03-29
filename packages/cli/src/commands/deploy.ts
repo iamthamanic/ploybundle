@@ -9,18 +9,19 @@ import { resolveProjectConfig } from "../config-resolver.js";
 
 export function registerDeployCommand(program: Command, context: CliContext): void {
   program
-    .command("deploy <project-name>")
+    .command("deploy [project-name]")
     .description("Deploy or re-deploy the project stack")
+    .option("--mode <mode>", "Run against mode: local or server")
     .option("--config <path>", "Path to ploybundle.yaml", CONFIG_FILENAME)
-    .action(async (projectName: string, options: Record<string, string>) => {
+    .action(async (projectName: string | undefined, options: Record<string, string>) => {
       const output = new CliOutput(context);
 
       try {
-        const config = resolveProjectConfig(projectName, options.config);
+        const config = resolveProjectConfig(projectName, options.config, options.mode);
 
-        output.info(`Deploying project: ${config.projectName}`);
+        output.info(`Deploying project: ${config.projectName} (${config.mode} mode)`);
 
-        const adapter = createAdapter(config.target);
+        const adapter = createAdapter(config);
         const renderer = new StackArtifactRenderer();
         const orchestrator = new Orchestrator(adapter, renderer, {
           onPhaseStart: (_phase, message) => output.spinner(message).start(),

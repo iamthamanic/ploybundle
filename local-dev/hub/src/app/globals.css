@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --pb-sidebar: 15rem;
+  --pb-bg: #0d1018;
+  --pb-panel: #141927;
+  --pb-soft: #1a2030;
+  --pb-muted: #8f9bb3;
+}
+
+body {
+  @apply antialiased;
+  background: radial-gradient(1200px 600px at 20% -20%, #1b2440 0%, var(--pb-bg) 45%) fixed;
+  color: #e8edf7;
+}

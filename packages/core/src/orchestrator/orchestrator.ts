@@ -6,6 +6,7 @@ import type {
   DeployPhase,
   StackArtifacts,
   ProjectSummary,
+  GeneratedSecrets,
 } from "@ploybundle/shared";
 import { DeployError, buildProjectUrls } from "@ploybundle/shared";
 import { SshService } from "../ssh/ssh-service.js";
@@ -51,46 +52,46 @@ export class Orchestrator {
     }));
     if (!phases[phases.length - 1]!.success) return this.buildResult(phases);
 
-    // Phase 2: Connect and inspect
-    phases.push(await this.runPhase("connect", "Connecting to host", async () => {
-      const connected = await this.ssh.testConnection(config.ssh);
-      if (!connected) {
-        throw new DeployError(
-          `Cannot connect to ${config.ssh.user}@${config.ssh.host}:${config.ssh.port}`,
-          "connect",
-          "Check SSH credentials, key file, and that the server is reachable."
-        );
-      }
-      return { connected: true };
-    }));
-    if (!phases[phases.length - 1]!.success) return this.buildResult(phases);
-
-    // Phase 3: Inspect host
-    phases.push(await this.runPhase("inspect", "Inspecting host", async () => {
-      const diagnosis = await this.inspector.inspect(config.ssh);
-      const validation = this.inspector.validate(diagnosis);
-
-      if (!validation.valid) {
-        this.callbacks.onLog?.(`Host issues found:\n${validation.issues.join("\n")}`);
-        // Non-fatal warnings for non-Ubuntu systems
-        if (!diagnosis.isUbuntu2404) {
-          this.callbacks.onLog?.("Warning: Non-Ubuntu 24.04 detected. Proceeding with caution.");
+    if (config.mode === "server") {
+      // Phase 2: Connect and inspect
+      phases.push(await this.runPhase("connect", "Connecting to host", async () => {
+        const connected = await this.ssh.testConnection(config.ssh);
+        if (!connected) {
+          throw new DeployError(
+            `Cannot connect to ${config.ssh.user}@${config.ssh.host}:${config.ssh.port}`,
+            "connect",
+            "Check SSH credentials, key file, and that the server is reachable."
+          );
         }
-      }
+        return { connected: true };
+      }));
+      if (!phases[phases.length - 1]!.success) return this.buildResult(phases);
 
-      // Install Docker if missing
-      if (!diagnosis.dockerInstalled) {
-        this.callbacks.onLog?.("Docker not found. Installing...");
-        const dockerResult = await this.dockerInstaller.ensureDocker(config.ssh);
-        this.callbacks.onLog?.(dockerResult.alreadyPresent ? "Docker already installed." : "Docker installed successfully.");
-      }
+      // Phase 3: Inspect host
+      phases.push(await this.runPhase("inspect", "Inspecting host", async () => {
+        const diagnosis = await this.inspector.inspect(config.ssh);
+        const validation = this.inspector.validate(diagnosis);
 
-      return { diagnosis };
-    }));
-    if (!phases[phases.length - 1]!.success) return this.buildResult(phases);
+        if (!validation.valid) {
+          this.callbacks.onLog?.(`Host issues found:\n${validation.issues.join("\n")}`);
+          if (!diagnosis.isUbuntu2404) {
+            this.callbacks.onLog?.("Warning: Non-Ubuntu 24.04 detected. Proceeding with caution.");
+          }
+        }
 
-    // Phase 4: Install platform
-    phases.push(await this.runPhase("install-platform", `Installing ${this.adapter.name}`, async () => {
+        if (!diagnosis.dockerInstalled) {
+          this.callbacks.onLog?.("Docker not found. Installing...");
+          const dockerResult = await this.dockerInstaller.ensureDocker(config.ssh);
+          this.callbacks.onLog?.(dockerResult.alreadyPresent ? "Docker already installed." : "Docker installed successfully.");
+        }
+
+        return { diagnosis };
+      }));
+      if (!phases[phases.length - 1]!.success) return this.buildResult(phases);
+    }
+
+    // Phase 4: Install platform / validate local runtime
+    phases.push(await this.runPhase("install-platform", `Preparing ${this.adapter.name}`, async () => {
       const result = await this.adapter.installPlatform(config.ssh, config);
       return result.details ?? {};
     }));
@@ -99,9 +100,9 @@ export class Orchestrator {
     // Phase 5: Render project bundle
     let artifacts: StackArtifacts;
     phases.push(await this.runPhase("render", "Rendering project bundle", async () => {
-      const { secrets, isNew } = await this.secretsManager.loadOrGenerate(config.ssh, config);
+      const { secrets, isNew } = await this.loadOrGenerateSecrets(config);
       if (isNew) {
-        await this.secretsManager.persist(config.ssh, secrets);
+        await this.persistSecrets(config, secrets);
         this.callbacks.onLog?.("Generated and stored new secrets.");
       } else {
         this.callbacks.onLog?.("Using existing secrets.");
@@ -123,7 +124,7 @@ export class Orchestrator {
     // Phase 7: Seed
     phases.push(await this.runPhase("seed", "Seeding services", async () => {
       // Set environment variables on the platform
-      const { secrets } = await this.secretsManager.loadOrGenerate(config.ssh, config);
+      const { secrets } = await this.loadOrGenerateSecrets(config);
       const env = this.secretsManager.buildEnvMap(secrets, config);
       await this.adapter.setEnvironmentVariables(config.ssh, config, env);
       return { seeded: true };
@@ -143,7 +144,10 @@ export class Orchestrator {
   async deploy(config: ProjectConfig): Promise<DeployResult> {
     const phases: PhaseResult[] = [];
 
-    const { secrets } = await this.secretsManager.loadOrGenerate(config.ssh, config);
+    const { secrets, isNew } = await this.loadOrGenerateSecrets(config);
+    if (isNew) {
+      await this.persistSecrets(config, secrets);
+    }
     const env = this.secretsManager.buildEnvMap(secrets, config);
     const artifacts = this.renderer.render(config, env);
 
@@ -170,7 +174,10 @@ export class Orchestrator {
   async update(config: ProjectConfig): Promise<DeployResult> {
     const phases: PhaseResult[] = [];
 
-    const { secrets } = await this.secretsManager.loadOrGenerate(config.ssh, config);
+    const { secrets, isNew } = await this.loadOrGenerateSecrets(config);
+    if (isNew) {
+      await this.persistSecrets(config, secrets);
+    }
     const env = this.secretsManager.buildEnvMap(secrets, config);
     const artifacts = this.renderer.render(config, env);
 
@@ -226,14 +233,32 @@ export class Orchestrator {
       const urls = buildProjectUrls(config.domain);
       summary = {
         projectName: config.projectName,
+        mode: config.mode,
         target: config.target,
-        preset: config.preset,
+        preset: config.template?.name ?? config.preset,
         urls,
         services: [],
-        troubleshootingHint: `Run 'ploybundle doctor ${config.projectName}' to diagnose issues.`,
+        troubleshootingHint: `Run 'ploybundle doctor ${config.projectName}${config.mode === "server" ? " --mode server" : " --mode local"}' to diagnose issues.`,
       };
     }
 
     return { success, phases, summary };
+  }
+
+  private async loadOrGenerateSecrets(config: ProjectConfig): Promise<{ secrets: GeneratedSecrets; isNew: boolean }> {
+    if (config.mode === "local") {
+      return this.secretsManager.loadOrGenerateLocal(config.projectRoot);
+    }
+
+    return this.secretsManager.loadOrGenerate(config.ssh, config);
+  }
+
+  private async persistSecrets(config: ProjectConfig, secrets: GeneratedSecrets): Promise<void> {
+    if (config.mode === "local") {
+      this.secretsManager.persistLocal(config.projectRoot, secrets);
+      return;
+    }
+
+    await this.secretsManager.persist(config.ssh, secrets);
   }
 }

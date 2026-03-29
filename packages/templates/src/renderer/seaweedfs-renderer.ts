@@ -64,7 +64,7 @@ set -e
 
 # Wait for SeaweedFS to be ready
 echo "Waiting for SeaweedFS..."
-until wget --spider -q http://seaweedfs:9333/cluster/status 2>/dev/null; do
+until wget -q -O /dev/null http://seaweedfs:9333/cluster/healthz 2>/dev/null; do
   sleep 2
 done
 echo "SeaweedFS is ready."

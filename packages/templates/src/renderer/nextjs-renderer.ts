@@ -1,6 +1,6 @@
-import type { ProjectConfig, PresetDefinition } from "@ploybundle/shared";
+import type { ProjectConfig, ScaffoldBlueprint } from "@ploybundle/shared";
 
-export function renderNextjsPackageJson(config: ProjectConfig, _preset: PresetDefinition): string {
+export function renderNextjsPackageJson(config: ProjectConfig, _preset: ScaffoldBlueprint): string {
   const pkg = {
     name: `@${config.projectName}/app`,
     version: "0.1.0",
@@ -28,6 +28,10 @@ export function renderNextjsPackageJson(config: ProjectConfig, _preset: PresetDe
 }
 
 export function renderNextjsConfig(config: ProjectConfig): string {
+  const scheme = config.domain.scheme ?? (config.mode === "local" ? "http" : "https");
+  const storageHost = config.domain.storage ?? `storage.${config.domain.root}`;
+  const [hostname, port] = storageHost.split(":");
+
   return `/** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
@@ -39,8 +43,9 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "${config.domain.storage ?? `storage.${config.domain.root}`}",
+        protocol: "${scheme}",
+        hostname: "${hostname}",
+        ${port ? `port: "${port}",` : ""}
       },
     ],
   },
@@ -78,7 +83,7 @@ export function renderNextjsTsConfig(): string {
   );
 }
 
-export function renderNextjsLayout(config: ProjectConfig, preset: PresetDefinition): string {
+export function renderNextjsLayout(config: ProjectConfig, preset: ScaffoldBlueprint): string {
   return `import type { Metadata } from "next";
 import "./globals.css";
 
@@ -138,14 +143,47 @@ a:hover {
 `;
 }
 
-export function renderNextjsHomePage(config: ProjectConfig, preset: PresetDefinition): string {
+export function renderNextjsHomePage(config: ProjectConfig, preset: ScaffoldBlueprint): string {
   const features = preset.nextjsFeatures
     .map((f) => `          <li key="${f}">${f.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</li>`)
     .join("\n");
+  const runtimeLabel = config.mode === "local" ? "local" : config.target;
+  const scheme = config.domain.scheme ?? (config.mode === "local" ? "http" : "https");
+  const dashboardHost = config.domain.dashboard ?? `home.${config.domain.root}`;
+  const hubUrl = `${scheme}://${dashboardHost}`;
 
   return `export default function Home() {
   return (
     <main style={{ maxWidth: 800, margin: "0 auto", padding: "2rem" }}>
+      <aside
+        style={{
+          marginBottom: "1.75rem",
+          padding: "1rem 1.25rem",
+          borderRadius: "var(--radius)",
+          border: "1px solid #bae6fd",
+          background: "#f0f9ff",
+          color: "#0c4a6e",
+          lineHeight: 1.55,
+        }}
+      >
+        <strong style={{ display: "block", marginBottom: "0.35rem" }}>Starter-Seite (Platzhalter)</strong>
+        <span>
+          Ploybundle hat diese Ansicht automatisch erzeugt, damit der App-Container eine funktionierende Route hat.
+          Das ist <strong>noch keine</strong> fertige Produkt-Oberfläche — baue dein echtes Frontend z.&nbsp;B. in{" "}
+          <code style={{ fontSize: "0.9em", background: "#e0f2fe", padding: "0.15rem 0.35rem", borderRadius: 4 }}>
+            src/app/page.tsx
+          </code>
+          .
+        </span>
+        <p style={{ margin: "0.75rem 0 0", fontSize: "0.95rem" }}>
+          <a href="${hubUrl}" style={{ fontWeight: 600 }}>
+            Zum Projekt-Hub
+          </a>
+          {" "}
+          (Directus, Windmill, Datenbank, …)
+        </p>
+      </aside>
+
       <h1>${preset.displayName}</h1>
       <p style={{ color: "var(--muted)", marginBottom: "2rem" }}>
         ${preset.description}
@@ -153,18 +191,21 @@ export function renderNextjsHomePage(config: ProjectConfig, preset: PresetDefini
 
       <section style={{ marginBottom: "2rem" }}>
         <h2>Project: ${config.projectName}</h2>
-        <p>Preset: ${preset.name} | Target: ${config.target}</p>
+        <p>Preset: ${preset.name} | Runtime: ${runtimeLabel}</p>
       </section>
 
       <section style={{ marginBottom: "2rem" }}>
-        <h2>Features</h2>
+        <h2>Geplante Bausteine (Preset)</h2>
+        <p style={{ color: "var(--muted)", fontSize: "0.95rem", marginBottom: "0.5rem" }}>
+          Orientierung aus der Vorlage — noch nicht als fertige Screens umgesetzt.
+        </p>
         <ul style={{ paddingLeft: "1.5rem" }}>
 ${features}
         </ul>
       </section>
 
       <section>
-        <h2>Quick Links</h2>
+        <h2>Technik</h2>
         <ul style={{ paddingLeft: "1.5rem" }}>
           <li><a href="/api/health">Health Check API</a></li>
         </ul>
@@ -192,23 +233,28 @@ export async function GET() {
 }
 
 export function renderNextjsEnvLocal(config: ProjectConfig): string {
+  const scheme = config.domain.scheme ?? (config.mode === "local" ? "http" : "https");
+  const appUrl = `${scheme}://${config.domain.app ?? config.domain.root}`;
+  const adminUrl = `${scheme}://${config.domain.admin ?? `admin.${config.domain.root}`}`;
+  const storageUrl = `${scheme}://${config.domain.storage ?? `storage.${config.domain.root}`}`;
+
   return `# Auto-generated by ploybundle - do not edit directly
 # Use ploybundle.yaml to manage configuration
 
 # App
-NEXT_PUBLIC_APP_URL=https://${config.domain.app ?? config.domain.root}
-NEXT_PUBLIC_API_URL=https://${config.domain.app ?? config.domain.root}/api
+NEXT_PUBLIC_APP_URL=${appUrl}
+NEXT_PUBLIC_API_URL=${appUrl}/api
 
 # Directus
-NEXT_PUBLIC_DIRECTUS_URL=https://${config.domain.admin ?? `admin.${config.domain.root}`}
+NEXT_PUBLIC_DIRECTUS_URL=${adminUrl}
 DIRECTUS_URL=http://directus:8055
 DIRECTUS_TOKEN=\${DIRECTUS_ADMIN_TOKEN}
 
 # Storage
-NEXT_PUBLIC_STORAGE_URL=https://${config.domain.storage ?? `storage.${config.domain.root}`}
+NEXT_PUBLIC_STORAGE_URL=${storageUrl}
 
 # Auth
-NEXTAUTH_URL=https://${config.domain.app ?? config.domain.root}
+NEXTAUTH_URL=${appUrl}
 NEXTAUTH_SECRET=\${NEXTAUTH_SECRET}
 
 # Database

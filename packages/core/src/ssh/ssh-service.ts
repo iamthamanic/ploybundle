@@ -1,14 +1,34 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { execFile, type ExecFileOptionsWithStringEncoding } from "node:child_process";
 import type { SshTarget } from "@ploybundle/shared";
 import { SshError } from "@ploybundle/shared";
 
-const execFileAsync = promisify(execFile);
+function execFileUtf8(
+  file: string,
+  args: string[],
+  options: ExecFileOptionsWithStringEncoding
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    execFile(file, args, options, (err, stdout, stderr) => {
+      if (err) reject(err);
+      else resolve({ stdout, stderr });
+    });
+  });
+}
 
 export interface CommandResult {
   stdout: string;
   stderr: string;
   exitCode: number;
+}
+
+export interface ExecOptions {
+  timeoutMs?: number;
+  maxBuffer?: number;
+}
+
+export interface UploadFileOptions {
+  timeoutMs?: number;
+  maxBuffer?: number;
 }
 
 export class SshService {
@@ -28,13 +48,14 @@ export class SshService {
     return args;
   }
 
-  async exec(target: SshTarget, command: string): Promise<CommandResult> {
+  async exec(target: SshTarget, command: string, options: ExecOptions = {}): Promise<CommandResult> {
     const args = [...this.buildArgs(target), command];
 
     try {
-      const { stdout, stderr } = await execFileAsync("ssh", args, {
-        maxBuffer: 10 * 1024 * 1024,
-        timeout: 300_000,
+      const { stdout, stderr } = await execFileUtf8("ssh", args, {
+        encoding: "utf8",
+        maxBuffer: options.maxBuffer ?? 10 * 1024 * 1024,
+        timeout: options.timeoutMs ?? 300_000,
       });
       return { stdout, stderr, exitCode: 0 };
     } catch (err: unknown) {
@@ -64,7 +85,12 @@ export class SshService {
     }
   }
 
-  async uploadFile(target: SshTarget, localPath: string, remotePath: string): Promise<void> {
+  async uploadFile(
+    target: SshTarget,
+    localPath: string,
+    remotePath: string,
+    options: UploadFileOptions = {}
+  ): Promise<void> {
     const args = [
       "-o", "StrictHostKeyChecking=accept-new",
       "-o", "ConnectTimeout=10",
@@ -78,7 +104,11 @@ export class SshService {
     args.push(localPath, `${target.user}@${target.host}:${remotePath}`);
 
     try {
-      await execFileAsync("scp", args, { timeout: 120_000 });
+      await execFileUtf8("scp", args, {
+        encoding: "utf8",
+        maxBuffer: options.maxBuffer ?? 10 * 1024 * 1024,
+        timeout: options.timeoutMs ?? 120_000,
+      });
     } catch (err) {
       throw new SshError(
         `Failed to upload ${localPath} to ${remotePath}: ${err instanceof Error ? err.message : String(err)}`,

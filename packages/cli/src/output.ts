@@ -103,14 +103,23 @@ export class CliOutput {
     this.log("");
     this.log(divider);
     this.log(this.context.noColor ? `  Project: ${summary.projectName}` : chalk.bold(`  Project: ${summary.projectName}`));
-    this.log(`  Target:  ${summary.target}`);
-    this.log(`  Preset:  ${summary.preset}`);
+    this.log(`  Mode:    ${summary.mode}`);
+    if (summary.target) {
+      this.log(`  Target:  ${summary.target}`);
+    }
+    this.log(`  Stack:   ${summary.preset}`);
     this.log(divider);
     this.log("");
     this.log(this.context.noColor ? "  URLs:" : chalk.bold("  URLs:"));
     this.log(`    App:        ${summary.urls.app}`);
     this.log(`    Admin:      ${summary.urls.admin}`);
     this.log(`    Storage:    ${summary.urls.storage}`);
+    if (summary.urls.storageBrowser !== summary.urls.storage) {
+      this.log(`    Storage UI: ${summary.urls.storageBrowser}`);
+    }
+    if (summary.urls.databaseBrowser) {
+      this.log(`    SQL (Adminer): ${summary.urls.databaseBrowser}`);
+    }
     this.log(`    Functions:  ${summary.urls.functions}`);
     this.log(`    Deploy:     ${summary.urls.deploy}`);
     this.log(`    Dashboard:  ${summary.urls.dashboard}`);
@@ -139,13 +148,19 @@ export class CliOutput {
 
     this.log("");
     this.log(this.context.noColor ? `Project: ${status.projectName}` : chalk.bold(`Project: ${status.projectName}`));
-    this.log(`Target: ${status.target} | Preset: ${status.preset}`);
+    this.log(`Mode: ${status.mode}${status.target ? ` | Target: ${status.target}` : ""} | Stack: ${status.preset}`);
     this.log("");
 
     this.log(this.context.noColor ? "URLs:" : chalk.bold("URLs:"));
     this.log(`  App:        ${status.urls.app}`);
     this.log(`  Admin:      ${status.urls.admin}`);
     this.log(`  Storage:    ${status.urls.storage}`);
+    if (status.urls.storageBrowser !== status.urls.storage) {
+      this.log(`  Storage UI: ${status.urls.storageBrowser}`);
+    }
+    if (status.urls.databaseBrowser) {
+      this.log(`  SQL (Adminer): ${status.urls.databaseBrowser}`);
+    }
     this.log(`  Functions:  ${status.urls.functions}`);
     this.log(`  Deploy:     ${status.urls.deploy}`);
     this.log(`  Dashboard:  ${status.urls.dashboard}`);

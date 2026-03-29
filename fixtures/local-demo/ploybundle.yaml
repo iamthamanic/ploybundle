@@ -1,0 +1,47 @@
+# Matches scripts/local-dev-stack-config.mjs — same shape a user has after configuring a project.
+# Used for: local-dev/ copy + `ploybundle open localdev` from the local-dev directory.
+projectName: localdev
+mode: local
+target: lite
+preset: crud-saas
+domain:
+  root: localhost
+  scheme: http
+  app: localhost:3001
+  admin: localhost:8055
+  storage: localhost:8333
+  storageBrowser: localhost:9333
+  functions: localhost:8000
+  deploy: localhost:3001
+  dashboard: localhost:7580
+  databaseBrowser: localhost:8088
+ssh:
+  host: "127.0.0.1"
+  port: 22
+  user: root
+email: admin@localdev.com
+services:
+  nextjs: true
+  postgres: true
+  redis: true
+  directus: true
+  seaweedfs: true
+  windmill: true
+  hub: true
+  adminer: true
+buckets:
+  - name: uploads
+    public: false
+  - name: exports
+    public: false
+directus:
+  adminEmail: admin@localdev.com
+windmill:
+  workspace: localdev
+  exampleFlows: true
+resourceProfile: small
+providerHint: generic
+# Optional: seed hub/config/board.json on render; sidebar edits still use PATCH /api/board only.
+hubPresentation:
+  displayName: Local dev
+  repositoryUrl: ""
